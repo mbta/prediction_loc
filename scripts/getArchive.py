@@ -16,6 +16,7 @@ LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
 parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
 parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}")
 parser.add_argument("-o", "--output", dest="output", required=True, help="Location for where to place the output file")
+parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
 args = vars(parser.parse_args())
 
 outputfile = os.path.expanduser(args["output"])
@@ -29,10 +30,14 @@ with open(outputfile, "w") as file:
     objectsWithPrefix = bucket.objects.filter(Prefix=prefix)
     for obj in objectsWithPrefix:
         if "mbta_bus_" in obj.key and "trip_updates" in obj.key:
-            pb_url = "https://s3.amazonaws.com/{0}/{1}".format(bucketName, obj.key)
-            print("Processing {0}...".format(pb_url))
-            response = urllib2.urlopen(pb_url)
-            feed_message.ParseFromString(response.read())
-            file.write(str(feed_message))
+            if args["raw"]:
+                print("Downloading {0}...".format(obj.key))
+                bucket.download_file(obj.key, outputfile)
+            else:
+                pb_url = "https://s3.amazonaws.com/{0}/{1}".format(bucketName, obj.key)
+                print("Processing {0}...".format(pb_url))
+                response = urllib2.urlopen(pb_url)
+                feed_message.ParseFromString(response.read())
+                file.write(str(feed_message))
             break
     print("Done.")
