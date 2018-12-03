@@ -2,7 +2,7 @@ import argparse
 import boto3
 import os
 import pytz
-import urllib2
+import urllib.request
 from datetime import datetime
 from sys import path
 
@@ -36,7 +36,7 @@ with open(outputfile, "w") as file:
             else:
                 pb_url = "https://s3.amazonaws.com/{0}/{1}".format(bucketName, obj.key)
                 print("Processing {0}...".format(pb_url))
-                response = urllib2.urlopen(pb_url)
+                response = urllib.request.urlopen(pb_url)
                 feed_message.ParseFromString(response.read())
                 file.write(str(feed_message))
             break
