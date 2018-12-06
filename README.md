@@ -2,6 +2,7 @@
 
 #### Setup
 * Install google protobuf library:  
+`pip3 install --user gtfs-realtime-bindings`  
 `pip3 install --user protobuf`
 
 * Install and setup AWS authentication with `awscli`:  
