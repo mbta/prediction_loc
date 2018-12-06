@@ -1,7 +1,8 @@
 # prediction-loc
 
 #### Setup
-* Install google protobuf library:  
+* Install necessary libraries:  
+`pip3 install --user boto3`  
 `pip3 install --user gtfs-realtime-bindings`  
 `pip3 install --user protobuf`
 
