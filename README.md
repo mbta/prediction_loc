@@ -11,7 +11,7 @@
 `aws configure`  
 Enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator
 
-* Ensure certificates are set up. 
+* Ensure certificates are set up.
 If you're using macOS go to Macintosh HD > Applications > Python folder > double click on "Install Certificates.command" file.
 
 * Configure  
@@ -20,4 +20,4 @@ Bucket name is shared on LastPass
 
 #### Usage
 
-`python getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
+`python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
