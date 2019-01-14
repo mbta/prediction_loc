@@ -11,7 +11,7 @@
 `aws configure`  
 Enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator
 
-* Ensure certificates are set up. 
+* Ensure certificates are set up.  
 If you're using macOS go to Macintosh HD > Applications > Python folder > double click on "Install Certificates.command" file.
 
 * Configure  
@@ -21,3 +21,11 @@ Bucket name is shared on LastPass
 #### Usage
 
 `python getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
+
+###### Optional arguments
+
+|       Argument       |                            Description                             |
+| -------------------- | ------------------------------------------------------------------ |
+| `--stop [stop id]`   | Only include trip_update entities that include the given stop      |
+| `--route [route id]` | Only include trip_update entities that reference the given route   |
+| `--raw`              | Download the file as a raw protobuf instead of human-readable text |
