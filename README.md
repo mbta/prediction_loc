@@ -20,7 +20,7 @@ Bucket name is shared on LastPass
 
 #### Usage
 
-`python getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
+`python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
 
 ###### Optional arguments
 
