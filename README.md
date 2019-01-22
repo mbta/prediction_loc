@@ -4,7 +4,8 @@
 * Install necessary libraries:  
 `pip3 install --user boto3`  
 `pip3 install --user gtfs-realtime-bindings`  
-`pip3 install --user protobuf`
+`pip3 install --user protobuf`  
+`pip3 install --user pytz`
 
 * Install and setup AWS authentication with `awscli`:  
 `pip3 install --user awscli`  
@@ -30,3 +31,12 @@ Bucket name is shared on LastPass
 | `--route [route id]` | Use to only include trip_updates affecting the given route         |
 | `--feed [name]`      | Feed to retrieve. Accepted values: `bus` (default), `subway`       |
 | `--raw`              | Download the file as a raw protobuf instead of human-readable text |
+
+#### Troubleshooting
+
+If the `aws` command cannot be found, you will need to add it to your `PATH`:
+1. Find the location of the install by running the command `python3 -c 'import awscli; print(awscli)'`
+  - It should print something similar to  `<module 'awscli' from '/Users/localuser/Library/Python/3.6/lib/python/site-packages/awscli/__init__.py'\>`
+2. Cut off the end of the filepath, starting with `lib`, and add `/bin` to get a path that looks like `/Users/localuser/Library/Python/3.6/bin`
+3. Add that to your `PATH` by opening (or creating) `~/.bash_profile` and adding `export PATH=$PATH:/Users/localuser/Library/Python/3.6/bin` (using the path you created in step 2)
+4. Open a new terminal window or run `source ~/.bash_profile` to apply your changes
