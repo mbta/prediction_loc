@@ -10,6 +10,3 @@ pytz = "*"
 boto3 = "*"
 gtfs-realtime-bindings = "*"
 protobuf = "*"
-
-[requires]
-python_version = "3.6"
