@@ -1,11 +1,11 @@
 # prediction-loc
 
 #### Setup
-* Install necessary libraries:  
-`pip3 install --user boto3`  
-`pip3 install --user gtfs-realtime-bindings`  
-`pip3 install --user protobuf`  
-`pip3 install --user pytz`
+* Ensure you have `pipenv` installed:  
+`brew install pipenv`
+
+* Install the necessary libraries:  
+`pipenv install`
 
 * Install and setup AWS authentication with `awscli`:  
 `pip3 install --user awscli`  
