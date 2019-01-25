@@ -25,7 +25,7 @@ def apply_filters(feed, args):
 
 def matches_filters(ent, args):
     if isinstance(ent, dict):
-        if args["route"] and ent["trip_update"]["trip"]["route_id"] != args["route"]:
+        if args["route"] and not matches_route(ent["trip_update"]["trip"]["route_id"], args):
             return False
 
         # If we get here, there was either no route filter, OR there was a filter & it matched
@@ -38,7 +38,7 @@ def matches_filters(ent, args):
                 return False
         return True
     else:
-        if args["route"] and ent.trip_update.trip.route_id != args["route"]:
+        if args["route"] and not matches_route(ent.trip_update.trip.route_id, args):
             return False
 
         # If we get here, there was either no route filter, OR there was a filter & it matched
@@ -50,6 +50,14 @@ def matches_filters(ent, args):
             if not found_stop:
                 return False
         return True
+
+def matches_route(route, args):
+    # do exact route matching on bus so route 1 filter won't include route 111, etc.
+    if args["feed"] == "bus":
+        return args["route"] == route
+    # do fuzzy matching on all other feeds
+    else:
+        return args["route"] in route
 
 def add_entity(feed, ent):
     if isinstance(feed, gtfs_realtime_pb2.FeedMessage):
@@ -68,7 +76,7 @@ OBJECT_PREFIX_FORMAT = "concentrate/{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
-FEED_TO_KEY_MAPPING = {"bus": ("mbta_bus_", "trip_updates"), "subway": ("rtr", "TripUpdates")}
+FEED_TO_KEY_MAPPING = {"bus": ("mbta_bus_", "trip_updates"), "subway": ("rtr", "TripUpdates"), "cr": ("mbta_cr_", "trip_updates")}
 
 parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
 parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}")
@@ -76,7 +84,7 @@ parser.add_argument("-o", "--output", dest="output", required=True, help="Locati
 parser.add_argument("-s", "--stop", dest="stop", help="Use to only include trip_updates affecting the given stop_id")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
 parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
-parser.add_argument("-f", "--feed", dest="feed", help="Feed to retrieve. Accepted values: 'bus' (default), 'subway'")
+parser.add_argument("-f", "--feed", dest="feed", help="Feed to retrieve. Accepted values: 'bus' (default), 'subway', 'cr'")
 args = vars(parser.parse_args())
 
 if not args["feed"]:
