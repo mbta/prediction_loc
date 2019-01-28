@@ -84,11 +84,8 @@ parser.add_argument("-o", "--output", dest="output", required=True, help="Locati
 parser.add_argument("-s", "--stop", dest="stop", help="Use to only include trip_updates affecting the given stop_id")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
 parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
-parser.add_argument("-f", "--feed", dest="feed", help="Feed to retrieve. Accepted values: 'bus' (default), 'subway', 'cr'")
+parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.keys(), default="bus" help="Feed to retrieve.")
 args = vars(parser.parse_args())
-
-if not args["feed"]:
-    args["feed"] = "bus"
 
 (feed_name, feed_type) = FEED_TO_KEY_MAPPING[args["feed"]]
 
