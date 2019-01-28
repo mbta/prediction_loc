@@ -1,12 +1,10 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "faf34ecb62a7bfd33e5ec32a1bcb3cecd3e996f2109b77dcb04c8372f48c2b0c"
+            "sha256": "0471925834724b3b965fa0ea0fd5e2a2ecab5daea8e230c8da8480e1eebac4dd"
         },
         "pipfile-spec": 6,
-        "requires": {
-            "python_version": "3.6"
-        },
+        "requires": {},
         "sources": [
             {
                 "name": "pypi",
@@ -18,18 +16,18 @@
     "default": {
         "boto3": {
             "hashes": [
-                "sha256:4ffe3214bfa8993fcc957c9528073ddf73125c6c7a18bb17143470bccecb7d13",
-                "sha256:b36df47ca517b7c2dcb981357fa255ff9460b6c70a5143e962b98f695fc3b729"
+                "sha256:63cd957ba663f5c10ff48ed904575eaa701314f79f18dbc59bd050311cd5f809",
+                "sha256:d1338582bc58741f54bd6b43488de6097a82ea45cebed0a3fd936981eadbb3a5"
             ],
             "index": "pypi",
-            "version": "==1.9.83"
+            "version": "==1.9.86"
         },
         "botocore": {
             "hashes": [
-                "sha256:23eab3b3c59a3581eb8478774177e9f4cdb5edf7bf7bb26d02e22c50b2e6e469",
-                "sha256:97026101d5a9aebdd1f1f1794a25ac5fbf5969823590ee1461fb0103bc796c33"
+                "sha256:24444e7580f0114c3e9fff5d2032c6f0cfbf88691b1be3ba27c6922507a902ec",
+                "sha256:5b01a16f02c3da55068b3aacfa1c37dd8e17141551e1702424b38dd21fa1c792"
             ],
-            "version": "==1.12.83"
+            "version": "==1.12.86"
         },
         "docutils": {
             "hashes": [
@@ -74,6 +72,13 @@
             ],
             "index": "pypi",
             "version": "==3.6.1"
+        },
+        "protobuf3-to-dict": {
+            "hashes": [
+                "sha256:1e42c25b5afb5868e3a9b1962811077e492c17557f9c66f0fe40d821375d2b5a"
+            ],
+            "index": "pypi",
+            "version": "==0.1.5"
         },
         "python-dateutil": {
             "hashes": [

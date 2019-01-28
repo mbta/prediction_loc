@@ -18,12 +18,12 @@ Enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator
 If you're using macOS go to Macintosh HD > Applications > Python folder > double click on "Install Certificates.command" file.
 
 * Configure  
-`export S3_BUCKET_NAME=bucket-name`
+`export S3_BUCKET_NAME=bucket-name`  
 Bucket name is shared on LastPass
 
 #### Usage
 
-`python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
+`pipenv run python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
 
 ###### Optional arguments
 
