@@ -8,15 +8,6 @@ from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 from urllib import request
 
-def apply_filters(feed, args):
-    new_feed = {"header": None, "entity": []}
-    new_feed["header"] = feed["header"]
-    entities = feed["entity"]
-    for e in entities:
-        if matches_filters(e, args):
-            new_feed["entity"].append(e)
-    return new_feed
-
 def matches_filters(ent, args):
     if args["route"] and not matches_route(ent["trip_update"]["trip"]["route_id"], args):
         return False
@@ -81,7 +72,10 @@ with open(outputfile, "w") as file:
                     feed_obj = gtfs_realtime_pb2.FeedMessage()
                     feed_obj.ParseFromString(response.read())
                     feed = protobuf_to_dict(feed_obj)
-                feed = apply_filters(feed, args)
+                feed = {
+                    "header": feed["header"],
+                    "entity": [e for e in feed["entity"] if matches_filters(e, args)]
+                }
                 file.write(json.dumps(feed))
             break
     print("Done.")
