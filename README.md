@@ -1,8 +1,10 @@
 # prediction-loc
 
 #### Setup
-* Ensure you have `pipenv` installed:  
-`brew install pipenv`
+* Install helper software:
+  1. Install Homebrew according to instructions at https://brew.sh   
+  2. `brew install pipenv`
+
 
 * Install the necessary libraries:  
 `pipenv install`
