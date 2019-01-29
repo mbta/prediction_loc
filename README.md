@@ -1,8 +1,10 @@
 # prediction-loc
 
 #### Setup
-* Ensure you have `pipenv` installed:  
-`brew install pipenv`
+* Install helper software:
+  1. Install Homebrew according to instructions at https://brew.sh   
+  2. `brew install pipenv`
+
 
 * Install the necessary libraries:  
 `pipenv install`
@@ -16,12 +18,12 @@ Enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator
 If you're using macOS go to Macintosh HD > Applications > Python folder > double click on "Install Certificates.command" file.
 
 * Configure  
-`export S3_BUCKET_NAME=bucket-name`
+`export S3_BUCKET_NAME=bucket-name`  
 Bucket name is shared on LastPass
 
 #### Usage
 
-`python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
+`pipenv run python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
 
 ###### Optional arguments
 
@@ -29,7 +31,7 @@ Bucket name is shared on LastPass
 | -------------------- | ------------------------------------------------------------------ |
 | `--stop [stop id]`   | Use to only include trip_updates affecting the given stop_id       |
 | `--route [route id]` | Use to only include trip_updates affecting the given route         |
-| `--feed [name]`      | Feed to retrieve. Accepted values: `bus` (default), `subway`       |
+| `--feed [name]`      | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr` |
 | `--raw`              | Download the file as a raw protobuf instead of human-readable text |
 
 #### Troubleshooting
