@@ -1,9 +1,13 @@
 # prediction-loc
 
 #### Setup
+* Ensure you have [Python 3](https://www.python.org/downloads/) installed.
 * Install helper software:
-  1. Install Homebrew according to instructions at https://brew.sh   
-  2. `brew install pipenv`
+  * Mac Users:
+    1. Install Homebrew according to instructions at https://brew.sh   
+    2. Install Pipenv with `brew install pipenv`
+  * Windows users:
+    1. Install Pipenv with `pip3 install --user pipenv`
 
 
 * Install the necessary libraries:  
