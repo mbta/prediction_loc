@@ -9,6 +9,9 @@ from protobuf_to_dict import protobuf_to_dict
 from urllib import request
 
 def matches_filters(ent, args):
+    if args["trip"] and not args["trip"] == ent["trip_update"]["trip"]["trip_id"]:
+        return False
+
     if args["route"] and not matches_route(ent["trip_update"]["trip"]["route_id"], args):
         return False
 
@@ -41,6 +44,7 @@ parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Da
 parser.add_argument("-o", "--output", dest="output", required=True, help="Location for where to place the output file")
 parser.add_argument("-s", "--stop", dest="stop", help="Use to only include trip_updates affecting the given stop_id")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
+parser.add_argument("-t", "--trip", dest="trip", help="Use to only include a specific trip_id")
 parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
 parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.keys(), default="bus", help="Feed to retrieve.")
 args = vars(parser.parse_args())
