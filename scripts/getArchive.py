@@ -41,7 +41,7 @@ def matches_route(route, args):
         return args["route"] in route
 
 def unix_to_local_string(unix):
-    time = datetime.utcfromtimestamp(unix).astimezone(LOCAL_TIMEZONE)
+    time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(LOCAL_TIMEZONE)
     return datetime.strftime(time, TIMESTAMP_FORMAT)
 
 def convert_timestamps(ent):
@@ -90,10 +90,8 @@ with open(outputfile, "w") as file:
                     feed_obj = gtfs_realtime_pb2.FeedMessage()
                     feed_obj.ParseFromString(response.read())
                     feed = protobuf_to_dict(feed_obj)
-                feed = {
-                    "header": feed["header"],
-                    "entity": [convert_timestamps(e) for e in feed["entity"] if matches_filters(e, args)]
-                }
+                feed["header"]["timestamp"] = unix_to_local_string(feed["header"]["timestamp"])
+                feed["entity"] = [convert_timestamps(e) for e in feed["entity"] if matches_filters(e, args)]
                 file.write(json.dumps(feed))
             break
     print("Done.")
