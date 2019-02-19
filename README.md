@@ -35,6 +35,7 @@ Bucket name is shared on LastPass
 | -------------------- | ------------------------------------------------------------------ |
 | `--stop [stop id]`   | Use to only include trip_updates affecting the given stop_id       |
 | `--route [route id]` | Use to only include trip_updates affecting the given route         |
+| `--trip [trip id]`   | Use to only include a specific trip_id                             |
 | `--feed [name]`      | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr` |
 | `--raw`              | Download the file as a raw protobuf instead of human-readable text |
 

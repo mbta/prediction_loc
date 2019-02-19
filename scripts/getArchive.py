@@ -8,7 +8,17 @@ from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 from urllib import request
 
+OBJECT_PREFIX_FORMAT = "concentrate/{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
+LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
+TIMESTAMP_FORMAT = "%-I:%M:%S %p"
+URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
+FEED_TO_KEY_MAPPING = {"bus": ("mbta_bus_", "trip_updates"), "subway": ("rtr", "TripUpdates"), "cr": ("mbta_cr_", "trip_updates")}
+
 def matches_filters(ent, args):
+    if args["trip"] and not args["trip"] == ent["trip_update"]["trip"]["trip_id"]:
+        return False
+
     if args["route"] and not matches_route(ent["trip_update"]["trip"]["route_id"], args):
         return False
 
@@ -30,17 +40,25 @@ def matches_route(route, args):
     else:
         return args["route"] in route
 
-OBJECT_PREFIX_FORMAT = "concentrate/{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
-DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
-LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
-URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
-FEED_TO_KEY_MAPPING = {"bus": ("mbta_bus_", "trip_updates"), "subway": ("rtr", "TripUpdates"), "cr": ("mbta_cr_", "trip_updates")}
+def unix_to_local_string(unix):
+    time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(LOCAL_TIMEZONE)
+    return datetime.strftime(time, TIMESTAMP_FORMAT)
+
+def convert_timestamps(ent):
+    trip_update_timestamp = unix_to_local_string(ent["trip_update"]["timestamp"])
+    ent["trip_update"]["timestamp"] = trip_update_timestamp
+    for stu in ent["trip_update"]["stop_time_update"]:
+        stu_time = unix_to_local_string(stu["arrival"]["time"])
+        stu["arrival"]["time"] = stu_time
+        stu["departure"]["time"] = stu_time
+    return ent
 
 parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
 parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}")
 parser.add_argument("-o", "--output", dest="output", required=True, help="Location for where to place the output file")
 parser.add_argument("-s", "--stop", dest="stop", help="Use to only include trip_updates affecting the given stop_id")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
+parser.add_argument("-t", "--trip", dest="trip", help="Use to only include a specific trip_id")
 parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
 parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.keys(), default="bus", help="Feed to retrieve.")
 args = vars(parser.parse_args())
@@ -72,10 +90,8 @@ with open(outputfile, "w") as file:
                     feed_obj = gtfs_realtime_pb2.FeedMessage()
                     feed_obj.ParseFromString(response.read())
                     feed = protobuf_to_dict(feed_obj)
-                feed = {
-                    "header": feed["header"],
-                    "entity": [e for e in feed["entity"] if matches_filters(e, args)]
-                }
+                feed["header"]["timestamp"] = unix_to_local_string(feed["header"]["timestamp"])
+                feed["entity"] = [convert_timestamps(e) for e in feed["entity"] if matches_filters(e, args)]
                 file.write(json.dumps(feed))
             break
     print("Done.")
