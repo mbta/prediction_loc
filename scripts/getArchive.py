@@ -41,16 +41,22 @@ def matches_route(route, args):
         return args["route"] in route
 
 def unix_to_local_string(unix):
-    time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(LOCAL_TIMEZONE)
-    return datetime.strftime(time, TIMESTAMP_FORMAT)
+    if unix is None:
+        return None
+    else:
+        time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(LOCAL_TIMEZONE)
+        return datetime.strftime(time, TIMESTAMP_FORMAT)
 
 def convert_timestamps(ent):
     trip_update_timestamp = unix_to_local_string(ent["trip_update"]["timestamp"])
     ent["trip_update"]["timestamp"] = trip_update_timestamp
     for stu in ent["trip_update"]["stop_time_update"]:
-        stu_time = unix_to_local_string(stu["arrival"]["time"])
-        stu["arrival"]["time"] = stu_time
-        stu["departure"]["time"] = stu_time
+        if stu["arrival"] is not None:
+            arr_time = unix_to_local_string(stu["arrival"]["time"])
+            stu["arrival"]["time"] = arr_time
+        if stu["departure"] is not None:
+            dep_time = unix_to_local_string(stu["departure"]["time"])
+            stu["departure"]["time"] = dep_time
     return ent
 
 parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
