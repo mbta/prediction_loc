@@ -23,10 +23,10 @@ def matches_filters(ent, args):
         return False
 
     # If we get here, there was either no route filter, OR there was a filter & it matched
-    if args["stop"]:
+    if args["stops"]:
         found_stop = False
         for stu in ent["trip_update"]["stop_time_update"]:
-            if stu["stop_id"] == args["stop"]:
+            if stu["stop_id"] in args["stops"]:
                 found_stop = True
         if not found_stop:
             return False
@@ -62,7 +62,7 @@ def convert_timestamps(ent):
 parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
 parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}")
 parser.add_argument("-o", "--output", dest="output", required=True, help="Location for where to place the output file")
-parser.add_argument("-s", "--stop", dest="stop", help="Use to only include trip_updates affecting the given stop_id")
+parser.add_argument("-s", "--stop", dest="stops", help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
 parser.add_argument("-t", "--trip", dest="trip", help="Use to only include a specific trip_id")
 parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
@@ -70,6 +70,10 @@ parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.key
 args = vars(parser.parse_args())
 
 (feed_name, feed_type) = FEED_TO_KEY_MAPPING[args["feed"]]
+if args["stops"]:
+    args["stops"] = args["stops"].split(",")
+else:
+    args["stops"] = []
 
 outputfile = os.path.expanduser(args["output"])
 dateTime = LOCAL_TIMEZONE.localize(datetime.strptime(args["datetime"], DATETIME_FORMAT)).astimezone(pytz.utc)
