@@ -13,7 +13,12 @@ DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
 TIMESTAMP_FORMAT = "%-I:%M:%S %p"
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
-FEED_TO_KEY_MAPPING = {"bus": ("mbta_bus_", "trip_updates"), "subway": ("rtr", "TripUpdates"), "cr": ("mbta_cr_", "trip_updates")}
+FEED_TO_KEY_MAPPING = {
+    "bus": ("mbta_bus_", "trip_updates"),
+    "subway": ("rtr", "TripUpdates"),
+    "cr": ("mbta_cr_", "trip_updates"),
+    "winthrop": ("mbta_winthrop_", "trip_updates"),
+}
 
 def matches_filters(ent, args):
     if args["trip"] and not args["trip"] == ent["trip_update"]["trip"]["trip_id"]:
