@@ -13,7 +13,12 @@ DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
 TIMESTAMP_FORMAT = "%-I:%M:%S %p"
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
-FEED_TO_KEY_MAPPING = {"bus": ("mbta_bus_", "trip_updates"), "subway": ("rtr", "TripUpdates"), "cr": ("mbta_cr_", "trip_updates")}
+FEED_TO_KEY_MAPPING = {
+    "bus": ("mbta_bus_", "trip_updates"),
+    "subway": ("rtr", "TripUpdates"),
+    "cr": ("mbta_cr_", "trip_updates"),
+    "winthrop": ("mbta_winthrop_", "trip_updates"),
+}
 
 def matches_filters(ent, args):
     if args["trip"] and not args["trip"] == ent["trip_update"]["trip"]["trip_id"]:
@@ -23,10 +28,10 @@ def matches_filters(ent, args):
         return False
 
     # If we get here, there was either no route filter, OR there was a filter & it matched
-    if args["stop"]:
+    if args["stops"]:
         found_stop = False
         for stu in ent["trip_update"]["stop_time_update"]:
-            if stu["stop_id"] == args["stop"]:
+            if stu["stop_id"] in args["stops"]:
                 found_stop = True
         if not found_stop:
             return False
@@ -41,22 +46,28 @@ def matches_route(route, args):
         return args["route"] in route
 
 def unix_to_local_string(unix):
-    time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(LOCAL_TIMEZONE)
-    return datetime.strftime(time, TIMESTAMP_FORMAT)
+    if unix is None:
+        return None
+    else:
+        time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(LOCAL_TIMEZONE)
+        return datetime.strftime(time, TIMESTAMP_FORMAT)
 
 def convert_timestamps(ent):
     trip_update_timestamp = unix_to_local_string(ent["trip_update"]["timestamp"])
     ent["trip_update"]["timestamp"] = trip_update_timestamp
     for stu in ent["trip_update"]["stop_time_update"]:
-        stu_time = unix_to_local_string(stu["arrival"]["time"])
-        stu["arrival"]["time"] = stu_time
-        stu["departure"]["time"] = stu_time
+        if stu["arrival"] is not None:
+            arr_time = unix_to_local_string(stu["arrival"]["time"])
+            stu["arrival"]["time"] = arr_time
+        if stu["departure"] is not None:
+            dep_time = unix_to_local_string(stu["departure"]["time"])
+            stu["departure"]["time"] = dep_time
     return ent
 
 parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
 parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}")
 parser.add_argument("-o", "--output", dest="output", required=True, help="Location for where to place the output file")
-parser.add_argument("-s", "--stop", dest="stop", help="Use to only include trip_updates affecting the given stop_id")
+parser.add_argument("-s", "--stop", dest="stops", help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
 parser.add_argument("-t", "--trip", dest="trip", help="Use to only include a specific trip_id")
 parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
@@ -64,6 +75,10 @@ parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.key
 args = vars(parser.parse_args())
 
 (feed_name, feed_type) = FEED_TO_KEY_MAPPING[args["feed"]]
+if args["stops"]:
+    args["stops"] = args["stops"].split(",")
+else:
+    args["stops"] = []
 
 outputfile = os.path.expanduser(args["output"])
 dateTime = LOCAL_TIMEZONE.localize(datetime.strptime(args["datetime"], DATETIME_FORMAT)).astimezone(pytz.utc)
