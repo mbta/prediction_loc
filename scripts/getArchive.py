@@ -67,7 +67,7 @@ def convert_timestamps(ent):
 
 parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
 parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}")
-parser.add_argument("-o", "--output", dest="output", required=True, help="Location for where to place the output file")
+parser.add_argument("-o", "--output", dest="output", help="Location for where to place the output file")
 parser.add_argument("-s", "--stop", dest="stops", help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
 parser.add_argument("-t", "--trip", dest="trip", help="Use to only include a specific trip_id")
@@ -75,17 +75,30 @@ parser.add_argument("--raw", action="store_true", help="Flag that the archive fi
 parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.keys(), default="bus", help="Feed to retrieve. Defaults to \"bus\"")
 args = vars(parser.parse_args())
 
+dateTime = LOCAL_TIMEZONE.localize(datetime.strptime(args["datetime"], DATETIME_FORMAT)).astimezone(pytz.utc)
+
 (feed_name, feed_type) = FEED_TO_KEY_MAPPING[args["feed"]]
 if args["stops"]:
     args["stops"] = args["stops"].split(",")
 else:
     args["stops"] = []
 
+if not args["output"]:
+    if os.path.exists("scripts/"):
+    # If the script is being called from the PredictionLoc root directory:
+        if not os.path.exists("output/"):
+            os.mkdir("output/")
+        args["output"] = "output/{0}.json".format(args["datetime"])
+    else:
+    # Assume the script is being called from the prediction-loc/scripts directory:
+        if not os.path.exists("../output/"):
+            os.mkdir("../output/")
+        args["output"] = "../output/{0}.json".format(args["datetime"])
+
 if args["feed"] == "concentrate":
     OBJECT_PREFIX_FORMAT = OBJECT_PREFIX_FORMAT[12:]
 
 outputfile = os.path.expanduser(args["output"])
-dateTime = LOCAL_TIMEZONE.localize(datetime.strptime(args["datetime"], DATETIME_FORMAT)).astimezone(pytz.utc)
 with open(outputfile, "w") as file:
     bucketName = os.getenv("S3_BUCKET_NAME")
     print("Using bucket \"{0}\"".format(bucketName))
