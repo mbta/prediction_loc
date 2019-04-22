@@ -18,6 +18,7 @@ FEED_TO_KEY_MAPPING = {
     "subway": ("rtr", "TripUpdates"),
     "cr": ("mbta_cr_", "trip_updates"),
     "winthrop": ("mbta_winthrop_", "trip_updates"),
+    "concentrate": ("concentrate", "TripUpdates")
 }
 
 def matches_filters(ent, args):
@@ -39,7 +40,7 @@ def matches_filters(ent, args):
 
 def matches_route(route, args):
     # do exact route matching on bus so route 1 filter won't include route 111, etc.
-    if args["feed"] == "bus":
+    if args["feed"] == "bus" or args["source"] == "concentrate":
         return args["route"] == route
     # do fuzzy matching on all other feeds
     else:
@@ -70,8 +71,8 @@ parser.add_argument("-o", "--output", dest="output", required=True, help="Locati
 parser.add_argument("-s", "--stop", dest="stops", help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated")
 parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
 parser.add_argument("-t", "--trip", dest="trip", help="Use to only include a specific trip_id")
-parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded as raw protobuf")
-parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.keys(), default="bus", help="Feed to retrieve.")
+parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded directly without processing.")
+parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.keys(), default="bus", help="Feed to retrieve. Defaults to \"bus\"")
 args = vars(parser.parse_args())
 
 (feed_name, feed_type) = FEED_TO_KEY_MAPPING[args["feed"]]
@@ -79,6 +80,9 @@ if args["stops"]:
     args["stops"] = args["stops"].split(",")
 else:
     args["stops"] = []
+
+if args["feed"] == "concentrate":
+    OBJECT_PREFIX_FORMAT = OBJECT_PREFIX_FORMAT[12:]
 
 outputfile = os.path.expanduser(args["output"])
 dateTime = LOCAL_TIMEZONE.localize(datetime.strptime(args["datetime"], DATETIME_FORMAT)).astimezone(pytz.utc)
@@ -90,8 +94,10 @@ with open(outputfile, "w") as file:
     bucket = s3.Bucket(bucketName)
     prefix = OBJECT_PREFIX_FORMAT.format(dateTime.year, dateTime.month, dateTime.day, dateTime.hour, dateTime.minute)
     objectsWithPrefix = bucket.objects.filter(Prefix=prefix)
+    matchFound = False
     for obj in objectsWithPrefix:
         if feed_name in obj.key and feed_type in obj.key:
+            matchFound = True
             if args["raw"]:
                 print("Downloading {0}...".format(obj.key))
                 bucket.download_file(obj.key, outputfile)
@@ -109,4 +115,6 @@ with open(outputfile, "w") as file:
                 feed["entity"] = [convert_timestamps(e) for e in feed["entity"] if matches_filters(e, args)]
                 file.write(json.dumps(feed))
             break
+    if not matchFound:
+        print("No matching file found with prefix \"{0}\".".format(prefix))
     print("Done.")
