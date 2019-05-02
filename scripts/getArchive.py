@@ -1,12 +1,13 @@
 import argparse
 import boto3
+import gzip
 import json
 import os
 import pytz
+import requests
 from datetime import datetime
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
-from urllib import request
 
 OBJECT_PREFIX_FORMAT = "concentrate/{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
@@ -40,7 +41,7 @@ def matches_filters(ent, args):
 
 def matches_route(route, args):
     # do exact route matching on bus so route 1 filter won't include route 111, etc.
-    if args["feed"] == "bus" or args["source"] == "concentrate":
+    if args["feed"] == "bus" or args["feed"] == "concentrate":
         return args["route"] == route
     # do fuzzy matching on all other feeds
     else:
@@ -54,13 +55,14 @@ def unix_to_local_string(unix):
         return datetime.strftime(time, TIMESTAMP_FORMAT)
 
 def convert_timestamps(ent):
-    trip_update_timestamp = unix_to_local_string(ent["trip_update"]["timestamp"])
-    ent["trip_update"]["timestamp"] = trip_update_timestamp
+    if "timestamp" in ent["trip_update"].keys():
+        trip_update_timestamp = unix_to_local_string(ent["trip_update"]["timestamp"])
+        ent["trip_update"]["timestamp"] = trip_update_timestamp
     for stu in ent["trip_update"]["stop_time_update"]:
-        if stu["arrival"] is not None:
+        if "arrival" in stu.keys() and stu["arrival"] is not None:
             arr_time = unix_to_local_string(stu["arrival"]["time"])
             stu["arrival"]["time"] = arr_time
-        if stu["departure"] is not None:
+        if "departure" in stu.keys() and stu["departure"] is not None:
             dep_time = unix_to_local_string(stu["departure"]["time"])
             stu["departure"]["time"] = dep_time
     return ent
@@ -88,12 +90,12 @@ if not args["output"]:
     # If the script is being called from the PredictionLoc root directory:
         if not os.path.exists("output/"):
             os.mkdir("output/")
-        args["output"] = "output/{0}.json".format(args["datetime"])
+        args["output"] = "output/{0}-{1}.json".format(args["feed"], args["datetime"])
     else:
     # Assume the script is being called from the prediction-loc/scripts directory:
         if not os.path.exists("../output/"):
             os.mkdir("../output/")
-        args["output"] = "../output/{0}.json".format(args["datetime"])
+        args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
 
 if args["feed"] == "concentrate":
     OBJECT_PREFIX_FORMAT = OBJECT_PREFIX_FORMAT[12:]
@@ -117,12 +119,13 @@ with open(outputfile, "w") as file:
             else:
                 url = URL_FORMAT.format(bucketName, obj.key)
                 print("Processing {0}...".format(url))
-                response = request.urlopen(url)
+                response = requests.get(url)
+
                 if "json" in obj.key:
-                    feed = json.loads(response.read())
+                    feed = response.json()
                 else:
                     feed_obj = gtfs_realtime_pb2.FeedMessage()
-                    feed_obj.ParseFromString(response.read())
+                    feed_obj.ParseFromString(response.content)
                     feed = protobuf_to_dict(feed_obj)
                 feed["header"]["timestamp"] = unix_to_local_string(feed["header"]["timestamp"])
                 feed["entity"] = [convert_timestamps(e) for e in feed["entity"] if matches_filters(e, args)]
