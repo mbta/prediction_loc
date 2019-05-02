@@ -38,7 +38,7 @@ Bucket name is shared on LastPass
 | `--trip [trip id]`    | Use to only include a specific trip_id                                                        |
 | `--feed [name]`       | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `winthrop`, `concentrate` |
 | `--raw`               | Download the file directly, without filtering or processing                                   |
-| `--output [filepath]` | Where to create the output file (default is `prediction-loc/output/[datetime].json`)          |
+| `--output [filepath]` | Where to create the output file (default is `prediction-loc/output/[feed]-[datetime].json`)   |
 
 * Note: route_id is matched exactly for the `bus` and `concentrate` feeds, but does fuzzy matching for all others.
 For example, `--route Green` will include all Green Line branches, and `--route Worcester` will still match route_id
