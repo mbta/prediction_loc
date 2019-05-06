@@ -11,6 +11,7 @@ boto3 = "*"
 gtfs-realtime-bindings = "*"
 protobuf = "*"
 protobuf3-to-dict = "*"
+requests = "*"
 
 [requires]
 python_version = "3"

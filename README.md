@@ -27,20 +27,21 @@ Bucket name is shared on LastPass
 
 #### Usage
 
-`pipenv run python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm] --output [output file location]`
+`pipenv run python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm]`
 
 ###### Optional arguments
 
-|       Argument       |                                    Description                                    |
-| -------------------- | --------------------------------------------------------------------------------- |
-| `--stop [stop id]`   | Use to only include trip_updates affecting the given (comma-separated) stop_id(s) |
-| `--route [route id]` | Use to only include trip_updates affecting the given route                        |
-| `--trip [trip id]`   | Use to only include a specific trip_id                                            |
-| `--feed [name]`      | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `winthrop`    |
-| `--raw`              | Download the file directly, without filtering or processing                       |
+|        Argument       |                                          Description                                          |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| `--stop [stop id]`    | Use to only include trip_updates affecting the given (comma-separated) stop_id(s)             |
+| `--route [route id]`  | Use to only include trip_updates affecting the given route                                    |
+| `--trip [trip id]`    | Use to only include a specific trip_id                                                        |
+| `--feed [name]`       | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `winthrop`, `concentrate` |
+| `--raw`               | Download the file directly, without filtering or processing                                   |
+| `--output [filepath]` | Where to create the output file (default is `prediction-loc/output/[feed]-[datetime].json`)   |
 
-* Note: route_id is matched exactly for the bus feed, but does fuzzy matching for all others. For example,
-`--route Green` will include all Green Line branches, and `--route Worcester` will still match route_id
+* Note: route_id is matched exactly for the `bus` and `concentrate` feeds, but does fuzzy matching for all others.
+For example, `--route Green` will include all Green Line branches, and `--route Worcester` will still match route_id
 `CR-Worcester`
 
 #### Troubleshooting
