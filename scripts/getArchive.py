@@ -9,35 +9,47 @@ from datetime import datetime
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 
-OBJECT_PREFIX_FORMAT = "concentrate/{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
+OBJECT_PREFIX_FORMAT = (
+    "concentrate/{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
+)
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
 TIMESTAMP_FORMAT = "%-I:%M:%S %p"
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
 FEED_TO_KEY_MAPPING = {
-    "bus": ("mbta_bus_", "trip_updates"),
-    "subway": ("rtr", "TripUpdates"),
-    "cr": ("mbta_cr_", "trip_updates"),
-    "winthrop": ("mbta_winthrop_", "trip_updates"),
-    "concentrate": ("concentrate", "TripUpdates")
+    "bus": ["mbta_bus_", "trip_updates"],
+    "subway": ["rtr", "TripUpdates"],
+    "cr": ["mbta_cr_", "trip_updates"],
+    "cr_vehicle": ["mbta_cr_", "vehicle_positions"],
+    "winthrop": ["mbta_winthrop_", "trip_updates"],
+    "concentrate": ["concentrate", "TripUpdates"],
 }
 
-def matches_filters(ent, args):
-    if args["trip"] and not args["trip"] == ent["trip_update"]["trip"]["trip_id"]:
-        return False
 
-    if args["route"] and not matches_route(ent["trip_update"]["trip"]["route_id"], args):
-        return False
+def matches_filters(ent, args):
+    trip = entity_trip(ent)
+    if args["trip"]:
+        return trip and args["trip"] == trip["trip_id"]
+
+    if args["route"]:
+        return trip and matches_route(trip["route_id"], args)
 
     # If we get here, there was either no route filter, OR there was a filter & it matched
     if args["stops"]:
-        found_stop = False
         for stu in ent["trip_update"]["stop_time_update"]:
             if stu["stop_id"] in args["stops"]:
-                found_stop = True
-        if not found_stop:
+                return True
+        else:
             return False
     return True
+
+
+def entity_trip(ent):
+    if "trip_update" in ent:
+        return ent["trip_update"]["trip"]
+    if "vehicle" in ent:
+        return ent["vehicle"].get("trip")
+
 
 def matches_route(route, args):
     # do exact route matching on bus so route 1 filter won't include route 111, etc.
@@ -47,39 +59,85 @@ def matches_route(route, args):
     else:
         return args["route"] in route
 
+
 def unix_to_local_string(unix):
     if unix is None:
         return None
     else:
-        time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(LOCAL_TIMEZONE)
+        time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(
+            LOCAL_TIMEZONE
+        )
         return datetime.strftime(time, TIMESTAMP_FORMAT)
 
+
 def convert_timestamps(ent):
-    if "timestamp" in ent["trip_update"].keys():
-        trip_update_timestamp = unix_to_local_string(ent["trip_update"]["timestamp"])
-        ent["trip_update"]["timestamp"] = trip_update_timestamp
-    for stu in ent["trip_update"]["stop_time_update"]:
-        if "arrival" in stu.keys() and stu["arrival"] is not None:
-            arr_time = unix_to_local_string(stu["arrival"]["time"])
-            stu["arrival"]["time"] = arr_time
-        if "departure" in stu.keys() and stu["departure"] is not None:
-            dep_time = unix_to_local_string(stu["departure"]["time"])
-            stu["departure"]["time"] = dep_time
+    if "trip_update" in ent:
+        if "timestamp" in ent["trip_update"].keys():
+            trip_update_timestamp = unix_to_local_string(
+                ent["trip_update"]["timestamp"]
+            )
+            ent["trip_update"]["timestamp"] = trip_update_timestamp
+        for stu in ent["trip_update"]["stop_time_update"]:
+            if "arrival" in stu.keys() and stu["arrival"] is not None:
+                arr_time = unix_to_local_string(stu["arrival"]["time"])
+                stu["arrival"]["time"] = arr_time
+            if "departure" in stu.keys() and stu["departure"] is not None:
+                dep_time = unix_to_local_string(stu["departure"]["time"])
+                stu["departure"]["time"] = dep_time
+    if "vehicle" in ent:
+        vehicle_timestamp = unix_to_local_string(ent["vehicle"]["timestamp"])
+        ent["vehicle"]["timestamp"] = vehicle_timestamp
     return ent
 
-parser = argparse.ArgumentParser(description="Retrieve an archived GTFS-rt file from S3")
-parser.add_argument("-D", "--datetime", dest="datetime", required=True, help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}")
-parser.add_argument("-o", "--output", dest="output", help="Location for where to place the output file")
-parser.add_argument("-s", "--stop", dest="stops", help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated")
-parser.add_argument("-r", "--route", dest="route", help="Use to only include trip_updates affecting the given route")
-parser.add_argument("-t", "--trip", dest="trip", help="Use to only include a specific trip_id")
-parser.add_argument("--raw", action="store_true", help="Flag that the archive file should be downloaded directly without processing.")
-parser.add_argument("-f", "--feed", dest="feed", choices=FEED_TO_KEY_MAPPING.keys(), default="bus", help="Feed to retrieve. Defaults to \"bus\"")
+
+parser = argparse.ArgumentParser(
+    description="Retrieve an archived GTFS-rt file from S3"
+)
+parser.add_argument(
+    "-D",
+    "--datetime",
+    dest="datetime",
+    required=True,
+    help="Datetime of desired archive file, in format {YYYY}-{MM}-{DD}T{HH}:{mm}",
+)
+parser.add_argument(
+    "-o", "--output", dest="output", help="Location for where to place the output file"
+)
+parser.add_argument(
+    "-s",
+    "--stop",
+    dest="stops",
+    help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated",
+)
+parser.add_argument(
+    "-r",
+    "--route",
+    dest="route",
+    help="Use to only include trip_updates affecting the given route",
+)
+parser.add_argument(
+    "-t", "--trip", dest="trip", help="Use to only include a specific trip_id"
+)
+parser.add_argument(
+    "--raw",
+    action="store_true",
+    help="Flag that the archive file should be downloaded directly without processing.",
+)
+parser.add_argument(
+    "-f",
+    "--feed",
+    dest="feed",
+    choices=FEED_TO_KEY_MAPPING.keys(),
+    default="bus",
+    help='Feed to retrieve. Defaults to "bus"',
+)
 args = vars(parser.parse_args())
 
-dateTime = LOCAL_TIMEZONE.localize(datetime.strptime(args["datetime"], DATETIME_FORMAT)).astimezone(pytz.utc)
+dateTime = LOCAL_TIMEZONE.localize(
+    datetime.strptime(args["datetime"], DATETIME_FORMAT)
+).astimezone(pytz.utc)
 
-(feed_name, feed_type) = FEED_TO_KEY_MAPPING[args["feed"]]
+feed_types = FEED_TO_KEY_MAPPING[args["feed"]]
 if args["stops"]:
     args["stops"] = args["stops"].split(",")
 else:
@@ -87,12 +145,12 @@ else:
 
 if not args["output"]:
     if os.path.exists("scripts/"):
-    # If the script is being called from the PredictionLoc root directory:
+        # If the script is being called from the PredictionLoc root directory:
         if not os.path.exists("output/"):
             os.mkdir("output/")
         args["output"] = "output/{0}-{1}.json".format(args["feed"], args["datetime"])
     else:
-    # Assume the script is being called from the prediction-loc/scripts directory:
+        # Assume the script is being called from the prediction-loc/scripts directory:
         if not os.path.exists("../output/"):
             os.mkdir("../output/")
         args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
@@ -103,16 +161,16 @@ if args["feed"] == "concentrate":
 outputfile = os.path.expanduser(args["output"])
 with open(outputfile, "w") as file:
     bucketName = os.getenv("S3_BUCKET_NAME")
-    print("Using bucket \"{0}\"".format(bucketName))
+    print('Using bucket "{0}"'.format(bucketName))
     s3 = boto3.resource("s3")
     feed = None
     bucket = s3.Bucket(bucketName)
-    prefix = OBJECT_PREFIX_FORMAT.format(dateTime.year, dateTime.month, dateTime.day, dateTime.hour, dateTime.minute)
+    prefix = OBJECT_PREFIX_FORMAT.format(
+        dateTime.year, dateTime.month, dateTime.day, dateTime.hour, dateTime.minute
+    )
     objectsWithPrefix = bucket.objects.filter(Prefix=prefix)
-    matchFound = False
     for obj in objectsWithPrefix:
-        if feed_name in obj.key and feed_type in obj.key:
-            matchFound = True
+        if all(feed_type in obj.key for feed_type in feed_types):
             if args["raw"]:
                 print("Downloading {0}...".format(obj.key))
                 bucket.download_file(obj.key, outputfile)
@@ -120,17 +178,22 @@ with open(outputfile, "w") as file:
                 url = URL_FORMAT.format(bucketName, obj.key)
                 print("Processing {0}...".format(url))
                 response = requests.get(url)
-
                 if "json" in obj.key:
                     feed = response.json()
                 else:
                     feed_obj = gtfs_realtime_pb2.FeedMessage()
                     feed_obj.ParseFromString(response.content)
                     feed = protobuf_to_dict(feed_obj)
-                feed["header"]["timestamp"] = unix_to_local_string(feed["header"]["timestamp"])
-                feed["entity"] = [convert_timestamps(e) for e in feed["entity"] if matches_filters(e, args)]
-                file.write(json.dumps(feed))
+                feed["header"]["timestamp"] = unix_to_local_string(
+                    feed["header"]["timestamp"]
+                )
+                feed["entity"] = [
+                    convert_timestamps(e)
+                    for e in feed["entity"]
+                    if matches_filters(e, args)
+                ]
+                file.write(json.dumps(feed, indent=2))
             break
-    if not matchFound:
-        print("No matching file found with prefix \"{0}\".".format(prefix))
+    else:
+        print('No matching file found with prefix "{0}".'.format(prefix))
     print("Done.")
