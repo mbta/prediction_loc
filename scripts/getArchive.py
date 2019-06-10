@@ -14,7 +14,7 @@ OBJECT_PREFIX_FORMAT = (
 )
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
-TIMESTAMP_FORMAT = "%-I:%M:%S %p"
+TIMESTAMP_FORMAT = "%Y-%m-%d %-I:%M:%S %p"
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
 FEED_TO_KEY_MAPPING = {
     "bus": ["mbta_bus_", "trip_updates"],
