@@ -23,6 +23,7 @@ FEED_TO_KEY_MAPPING = {
     "cr_vehicle": ["mbta_cr_", "vehicle_positions"],
     "winthrop": ["mbta_winthrop_", "trip_updates"],
     "concentrate": ["concentrate", "TripUpdates"],
+    "alerts": ["Alerts_enhanced"],
 }
 
 
@@ -87,6 +88,21 @@ def convert_timestamps(ent):
     if "vehicle" in ent:
         vehicle_timestamp = unix_to_local_string(ent["vehicle"]["timestamp"])
         ent["vehicle"]["timestamp"] = vehicle_timestamp
+    if "alert" in ent:
+        alert = ent["alert"]
+        alert["created_timestamp"] = unix_to_local_string(alert["created_timestamp"])
+        alert["last_modified_timestamp"] = unix_to_local_string(
+            alert["last_modified_timestamp"]
+        )
+        active_periods = [
+            {
+                "start": unix_to_local_string(p.get("start")),
+                "end": unix_to_local_string(p.get("end")),
+            }
+            for p in alert["active_period"]
+        ]
+        alert["active_period"] = active_periods
+        ent["alert"] = alert
     return ent
 
 
