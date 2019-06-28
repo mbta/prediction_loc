@@ -10,12 +10,13 @@
     1. Install Pipenv with `pip3 install --user pipenv`
 
 
-* Install the necessary libraries:  
+* Install the necessary libraries. Run this command in the predictionloc directory:  
 `pipenv install`
 
 * Install and setup AWS authentication with `awscli`:  
 `pip3 install --user awscli`  
 `aws configure`  
+See troubleshooting section below if you can't get 'aws' configure' to run
 Enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator
 
 * Ensure certificates are set up.  
