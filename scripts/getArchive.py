@@ -22,7 +22,7 @@ FEED_TO_KEY_MAPPING = {
     "cr": ["mbta_cr_", "trip_updates"],
     "cr_vehicle": ["mbta_cr_", "vehicle_positions"],
     "winthrop": ["mbta_winthrop_", "trip_updates"],
-    "concentrate": ["concentrate", "TripUpdates"],
+    "concentrate": ["concentrate", "TripUpdates_enhanced"],
     "alerts": ["Alerts_enhanced"],
 }
 
@@ -37,7 +37,7 @@ def matches_filters(ent, args):
 
     # If we get here, there was either no route filter, OR there was a filter & it matched
     if args["stops"]:
-        for stu in ent["trip_update"]["stop_time_update"]:
+        for stu in ent["trip_update"].get("stop_time_update", {}):
             if stu["stop_id"] in args["stops"]:
                 return True
         else:
@@ -53,6 +53,8 @@ def entity_trip(ent):
 
 
 def matches_route(route, args):
+    if not route:
+        return False
     # do exact route matching on bus so route 1 filter won't include route 111, etc.
     if args["feed"] == "bus" or args["feed"] == "concentrate":
         return args["route"] == route
@@ -72,23 +74,25 @@ def unix_to_local_string(unix):
 
 
 def convert_timestamps(ent):
-    if "trip_update" in ent:
+    if not ent:
+        return ent
+    if ent.get("trip_update"):
         if "timestamp" in ent["trip_update"].keys():
             trip_update_timestamp = unix_to_local_string(
                 ent["trip_update"]["timestamp"]
             )
             ent["trip_update"]["timestamp"] = trip_update_timestamp
-        for stu in ent["trip_update"]["stop_time_update"]:
+        for stu in ent["trip_update"].get("stop_time_update", {}):
             if "arrival" in stu.keys() and stu["arrival"] is not None:
                 arr_time = unix_to_local_string(stu["arrival"]["time"])
                 stu["arrival"]["time"] = arr_time
             if "departure" in stu.keys() and stu["departure"] is not None:
                 dep_time = unix_to_local_string(stu["departure"]["time"])
                 stu["departure"]["time"] = dep_time
-    if "vehicle" in ent:
+    if ent.get("vehicle"):
         vehicle_timestamp = unix_to_local_string(ent["vehicle"]["timestamp"])
         ent["vehicle"]["timestamp"] = vehicle_timestamp
-    if "alert" in ent:
+    if ent.get("alert"):
         alert = ent["alert"]
         alert["created_timestamp"] = unix_to_local_string(alert["created_timestamp"])
         alert["last_modified_timestamp"] = unix_to_local_string(
