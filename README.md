@@ -4,31 +4,31 @@
 * Ensure you have [Python 3](https://www.python.org/downloads/) installed.
 * Install helper software:
   * Mac Users:
-    1. Install Homebrew according to instructions at https://brew.sh   
+    1. Install Homebrew according to instructions at https://brew.sh
     2. Install Pipenv with `brew install pipenv`
   * Windows users:
     1. Install Pipenv with `pip3 install --user pipenv`
 
 
-* Install the necessary libraries. Run this command in the predictionloc directory:  
+* Install the necessary libraries. Run this command in the predictionloc directory:
 `pipenv install`
 
-* Install and setup AWS authentication with `awscli`:  
-`pip3 install --user awscli`  
-`aws configure`  
+* Install and setup AWS authentication with `awscli`:
+`pip3 install --user awscli`
+`aws configure`
 See troubleshooting section below if you can't get 'aws' configure' to run
 Enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator
 
-* Ensure certificates are set up.  
+* Ensure certificates are set up.
 If you're using macOS go to Macintosh HD > Applications > Python folder > double click on "Install Certificates.command" file.
 
-* Configure  
-`export S3_BUCKET_NAME=bucket-name`  
+* Configure
+`export S3_BUCKET_NAME=bucket-name`
 Bucket name is shared on LastPass
 
 #### Usage
 
-`pipenv run python3 getArchive.py --datetime [YYYY-MM-DDTHH:mm]`
+`pipenv run getArchive --datetime [YYYY-MM-DDTHH:mm]`
 
 ###### Optional arguments
 
