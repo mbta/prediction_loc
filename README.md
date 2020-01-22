@@ -14,10 +14,11 @@
 `pipenv install`
 
 * Install and setup AWS authentication with `awscli`:
-`pip3 install --user awscli`
-`aws configure`
-See troubleshooting section below if you can't get 'aws' configure' to run
-Enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator
+  - `pip3 install --user awscli`
+  - `aws configure`
+
+  When prompted, enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator. See "Troubleshooting" section below if you can't get `aws configure` to run
+  
 
 * Ensure certificates are set up.
 If you're using macOS go to Macintosh HD > Applications > Python folder > double click on "Install Certificates.command" file.
