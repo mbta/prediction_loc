@@ -17,7 +17,7 @@
   - `pip3 install --user awscli`
   - `aws configure`
 
-  When prompted, enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator. See "Troubleshooting" section below if you can't get `aws configure` to run
+  When prompted, enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator. See "Troubleshooting" section below if you can't get `aws configure` to run. Enter 'us-east-1-' for the region name and hit enter for the default output format. 
   
 
 * Ensure certificates are set up.
