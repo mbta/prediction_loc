@@ -17,13 +17,19 @@ LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
 TIMESTAMP_FORMAT = "%Y-%m-%d %-I:%M:%S %p"
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
 FEED_TO_KEY_MAPPING = {
-    "bus": ["mbta_bus_", "trip_updates"],
-    "subway": ["rtr", "TripUpdates"],
-    "cr": ["mbta_cr_", "trip_updates"],
-    "cr_vehicle": ["mbta_cr_", "vehicle_positions"],
-    "winthrop": ["mbta_winthrop_", "trip_updates"],
-    "concentrate": ["concentrate", "TripUpdates_enhanced"],
-    "alerts": ["Alerts_enhanced"],
+    "bus": [["mbta_bus_", "trip_updates"]],
+    "subway": [["rtr", "TripUpdates"]],
+    "cr": [["mbta_cr_", "trip_updates"]],
+    "cr_vehicle": [["mbta_cr_", "vehicle_positions"]],
+    "cr_boarding": [["com_TripUpdates_enhanced"]],
+    "winthrop": [["mbta_winthrop_", "trip_updates"]],
+    "concentrate": [["concentrate_TripUpdates_enhanced"],
+                    ["realtime_TripUpdates_enhanced"]],
+    "concentrate_vehicle": [["concentrate_VehiclePositions_enhanced"],
+                            ["realtime_VehiclePositions_enhanced"]],
+    "alerts": [["Alerts_enhanced"]],
+    "busloc_vehicle": [["busloc", "VehiclePositions"]],
+    "swiftly_bus_vehicle": [["goswift.ly", "mbta_bus", "vehicle_positions"]]
 }
 
 
@@ -157,7 +163,7 @@ dateTime = LOCAL_TIMEZONE.localize(
     datetime.strptime(args["datetime"], DATETIME_FORMAT)
 ).astimezone(pytz.utc)
 
-feed_types = FEED_TO_KEY_MAPPING[args["feed"]]
+feed_type_choices = FEED_TO_KEY_MAPPING[args["feed"]]
 if args["stops"]:
     args["stops"] = args["stops"].split(",")
 else:
@@ -175,7 +181,7 @@ if not args["output"]:
             os.mkdir("../output/")
         args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
 
-if args["feed"] == "concentrate":
+if args["feed"].startswith("concentrate"):
     OBJECT_PREFIX_FORMAT = OBJECT_PREFIX_FORMAT[12:]
 
 outputfile = os.path.expanduser(args["output"])
@@ -190,7 +196,9 @@ with open(outputfile, "w") as file:
     )
     objectsWithPrefix = bucket.objects.filter(Prefix=prefix)
     for obj in objectsWithPrefix:
-        if all(feed_type in obj.key for feed_type in feed_types):
+        if any(
+                all(feed_type in obj.key for feed_type in feed_types)
+                for feed_types in feed_type_choices):
             if args["raw"]:
                 print("Downloading {0}...".format(obj.key))
                 bucket.download_file(obj.key, outputfile)
