@@ -17,7 +17,9 @@
   - `pip3 install --user awscli`
   - `aws configure`
 
-  When prompted, enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator. See "Troubleshooting" section below if you can't get `aws configure` to run
+  When prompted, enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator. See "Troubleshooting" section below if you can't get `aws configure` to run.
+  - enter 'us-east-1' for region name
+  - hit the enter/return key when prompted to enter a default output format  
   
 
 * Ensure certificates are set up.
@@ -41,6 +43,7 @@ Bucket name is shared on LastPass
 | `--feed [name]`       | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `winthrop`, `concentrate` |
 | `--raw`               | Download the file directly, without filtering or processing                                   |
 | `--output [filepath]` | Where to create the output file (default is `prediction-loc/output/[feed]-[datetime].json`)   |
+| `--f busloc_vehicle`  | Use to see all vehicles in our feed at the time                                                  |
 
 * Note: route_id is matched exactly for the `bus` and `concentrate` feeds, but does fuzzy matching for all others.
 For example, `--route Green` will include all Green Line branches, and `--route Worcester` will still match route_id
