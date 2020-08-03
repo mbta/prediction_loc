@@ -13,6 +13,8 @@ gtfs-realtime-bindings = "*"
 protobuf = "*"
 protobuf3-to-dict = "*"
 requests = "*"
+pandas = "*"
+gtfstk = "*"
 
 [requires]
 python_version = "3"
