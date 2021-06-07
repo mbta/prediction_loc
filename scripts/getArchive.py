@@ -28,6 +28,7 @@ FEED_TO_KEY_MAPPING = {
     "concentrate_vehicle": [["concentrate_VehiclePositions_enhanced"],
                             ["realtime_VehiclePositions_enhanced"]],
     "alerts": [["Alerts_enhanced"]],
+    "busloc": [["busloc", "TripUpdates"]],
     "busloc_vehicle": [["busloc", "VehiclePositions"]],
     "swiftly_bus_vehicle": [["goswift.ly", "mbta_bus", "vehicle_positions"]]
 }

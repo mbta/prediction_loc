@@ -34,7 +34,7 @@ Downloads archived MBTA real-time data feeds from various sources.
 | `--stop [stop id]`    | Use to only include trip_updates affecting the given (comma-separated) stop_id(s)             |
 | `--route [route id]`  | Use to only include trip_updates affecting the given route                                    |
 | `--trip [trip id]`    | Use to only include a specific trip_id                                                        |
-| `--feed [name]`       | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `cr_vehicle`, `cr_boarding`, `winthrop`, `concentrate`, `concentrate_vehicle`, `alerts`, `busloc_vehicle`, `swiftly_bus_vehicle` |
+| `--feed [name]`       | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `cr_vehicle`, `cr_boarding`, `winthrop`, `concentrate`, `concentrate_vehicle`, `alerts`, `busloc`, `busloc_vehicle`, `swiftly_bus_vehicle` |
 | `--raw`               | Download the file directly, without filtering or processing                                   |
 | `--output [filepath]` | Where to create the output file (default is `prediction-loc/output/[feed]-[datetime].json`)   |
 
