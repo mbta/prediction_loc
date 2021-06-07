@@ -1,57 +1,49 @@
 # prediction-loc
 
-#### Setup
-* Ensure you have [Python 3](https://www.python.org/downloads/) installed.
-* Install helper software:
-  * Mac Users:
-    1. Install Homebrew according to instructions at https://brew.sh
-    2. Install Pipenv with `brew install pipenv`
-  * Windows users:
-    1. Install Pipenv with `pip3 install --user pipenv`
+Downloads archived MBTA real-time data feeds from various sources.
 
+## Prerequisites
 
-* Install the necessary libraries. Run this command in the predictionloc directory:
-`pipenv install`
+* Python 3
+  * **Mac/Linux:** can install using [asdf](https://asdf-vm.com/) (`asdf install` in this directory)
+  * **Mac:** can install from [Homebrew](https://brew.sh) (`brew install python3 pipenv`)
+  * **Windows:**
+    * download from [official site](https://www.python.org/downloads/windows/)
+    * install Pipenv: `pip3 install --user pipenv`
+* AWS CLI
+  * **Mac:** can install from Homebrew (`brew install awscli`)
+  * **Any:** can install as a global Python package (`pip3 install --user awscli`)
+  * Use `aws configure` to set up your credentials:
+    * "Access Key ID" and "Secret Access Key" are provided by an AWS admin
+    * Enter "Region" as `us-east-1`
+    * Press Enter when prompted for a default output format
 
-* Install and setup AWS authentication with `awscli`:
-  - `pip3 install --user awscli`
-  - `aws configure`
+## Setup
 
-  When prompted, enter "Access Key ID" and "Secret Access Key" provided by an AWS administrator. See "Troubleshooting" section below if you can't get `aws configure` to run.
-  - enter 'us-east-1' for region name
-  - hit the enter/return key when prompted to enter a default output format  
-  
+* `pipenv install` in this directory
+* `export S3_BUCKET_NAME=x`, replacing `x` with bucket name stored in 1Password
 
-* Ensure certificates are set up.
-If you're using macOS go to Macintosh HD > Applications > Python folder > double click on "Install Certificates.command" file.
-
-* Configure
-`export S3_BUCKET_NAME=bucket-name`
-Bucket name is shared on LastPass
-
-#### Usage
+## Usage
 
 `pipenv run getArchive --datetime [YYYY-MM-DDTHH:mm]`
 
-###### Optional arguments
+### Optional arguments
 
 |        Argument       |                                          Description                                          |
 | --------------------- | --------------------------------------------------------------------------------------------- |
 | `--stop [stop id]`    | Use to only include trip_updates affecting the given (comma-separated) stop_id(s)             |
 | `--route [route id]`  | Use to only include trip_updates affecting the given route                                    |
 | `--trip [trip id]`    | Use to only include a specific trip_id                                                        |
-| `--feed [name]`       | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `cr_vehicle`, `cr_boarding`, `winthrop`, `concentrate`, `conentrate_vehicle`, `alerts`, `busloc_vehicle`, `swiftly_bus_vehicle` |
+| `--feed [name]`       | Feed to retrieve. Accepted values: `bus` (default), `subway`, `cr`, `cr_vehicle`, `cr_boarding`, `winthrop`, `concentrate`, `concentrate_vehicle`, `alerts`, `busloc_vehicle`, `swiftly_bus_vehicle` |
 | `--raw`               | Download the file directly, without filtering or processing                                   |
 | `--output [filepath]` | Where to create the output file (default is `prediction-loc/output/[feed]-[datetime].json`)   |
-| `--f busloc_vehicle`  | Use to see all vehicles in our feed at the time                                                  |
 
-* Note: route_id is matched exactly for the `bus` and `concentrate` feeds, but does fuzzy matching for all others.
-For example, `--route Green` will include all Green Line branches, and `--route Worcester` will still match route_id
-`CR-Worcester`
+**Note:** route_id is matched exactly for the `bus` and `concentrate` feeds, but does substring matching for all others. For example, `--route Green` will include all Green Line branches, and `--route Worcester` will still match route_id `CR-Worcester`.
 
-#### Troubleshooting
+### Troubleshooting
 
 If the `aws` command cannot be found, you will need to add it to your `PATH`:
+
 1. Find the location of the install by running the command `python3 -c 'import awscli; print(awscli)'`
   - It should print something similar to  `<module 'awscli' from '/Users/localuser/Library/Python/3.6/lib/python/site-packages/awscli/__init__.py'\>`
 2. Cut off the end of the filepath, starting with `lib`, and add `/bin` to get a path that looks like `/Users/localuser/Library/Python/3.6/bin`
