@@ -23,6 +23,10 @@ Downloads archived MBTA real-time data feeds from various sources.
 * `pipenv install` in this directory
 * `export S3_BUCKET_NAME=x`, replacing `x` with bucket name stored in 1Password
 
+## Clone and step into the Github directory
+* `git clone https://github.com/mbta/prediction_loc.git`
+* `cd prediction_loc`
+
 ## Usage
 
 `pipenv run getArchive --datetime [YYYY-MM-DDTHH:mm]`
