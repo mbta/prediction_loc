@@ -29,7 +29,8 @@ Downloads archived MBTA real-time data feeds from various sources.
 
 ## Usage
 
-`pipenv run getArchive --datetime [YYYY-MM-DDTHH:mm]`
+`poetry run prediction-loc --datetime (date -Iminutes -d 'last Fri')`
+`poetry run prediction-loc --datetime (date -Iminutes -d 'last Fri')`
 
 ### Optional arguments
 
