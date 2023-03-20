@@ -10,7 +10,7 @@ from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 
 OBJECT_PREFIX_FORMAT = (
-    "concentrate/{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
+    "{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
 )
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
@@ -158,6 +158,11 @@ parser.add_argument(
     default="bus",
     help='Feed to retrieve. Defaults to "bus"',
 )
+parser.add_argument(
+     "--object-prefix",
+    dest="object_prefix",
+    help="Specify a custom prefix for the key of the object to load from S3",
+)
 args = vars(parser.parse_args())
 
 dateTime = LOCAL_TIMEZONE.localize(
@@ -182,8 +187,10 @@ if not args["output"]:
             os.mkdir("../output/")
         args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
 
-if args["feed"].startswith("concentrate"):
-    OBJECT_PREFIX_FORMAT = OBJECT_PREFIX_FORMAT[12:]
+if args["object_prefix"]:
+    OBJECT_PREFIX_FORMAT = args["object_prefix"] + "/" + OBJECT_PREFIX_FORMAT
+elif not args["feed"].startswith("concentrate"):
+    OBJECT_PREFIX_FORMAT = "concentrate/" + OBJECT_PREFIX_FORMAT
 
 outputfile = os.path.expanduser(args["output"])
 with open(outputfile, "w") as file:
@@ -214,7 +221,7 @@ with open(outputfile, "w") as file:
                     feed_obj.ParseFromString(response.content)
                     feed = protobuf_to_dict(feed_obj)
                 feed["header"]["timestamp"] = unix_to_local_string(
-                    feed["header"]["timestamp"]
+                    int(feed["header"]["timestamp"])
                 )
                 feed["entity"] = [
                     convert_timestamps(e)
