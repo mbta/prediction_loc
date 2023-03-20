@@ -160,7 +160,7 @@ parser.add_argument(
 )
 parser.add_argument(
      "--object-prefix",
-    dest="object-prefix",
+    dest="object_prefix",
     help="Specify a custom prefix for the key of the object to load from S3",
 )
 args = vars(parser.parse_args())
@@ -187,8 +187,8 @@ if not args["output"]:
             os.mkdir("../output/")
         args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
 
-if args["object-prefix"]:
-    OBJECT_PREFIX_FORMAT = args["object-prefix"] + "/" + OBJECT_PREFIX_FORMAT
+if args["object_prefix"]:
+    OBJECT_PREFIX_FORMAT = args["object_prefix"] + "/" + OBJECT_PREFIX_FORMAT
 elif not args["feed"].startswith("concentrate"):
     OBJECT_PREFIX_FORMAT = "concentrate/" + OBJECT_PREFIX_FORMAT
 
