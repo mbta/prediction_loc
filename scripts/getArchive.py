@@ -116,118 +116,121 @@ def convert_timestamps(ent):
         ent["alert"] = alert
     return ent
 
-
-parser = argparse.ArgumentParser(
-    description="Retrieve an archived GTFS-rt file from S3"
-)
-parser.add_argument(
-    "-D",
-    "--datetime",
-    dest="datetime",
-    required=True,
-    help="Datetime of desired archive file, in ISO 8601 & 3339 formats ({YYYY}-{MM}-{DD}T{HH}:{mm}-{utc_tz_offset}?)",
-)
-parser.add_argument(
-    "-o", "--output", dest="output", help="Location for where to place the output file"
-)
-parser.add_argument(
-    "-s",
-    "--stop",
-    dest="stops",
-    help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated",
-)
-parser.add_argument(
-    "-r",
-    "--route",
-    dest="route",
-    help="Use to only include trip_updates affecting the given route",
-)
-parser.add_argument(
-    "-t", "--trip", dest="trip", help="Use to only include a specific trip_id"
-)
-parser.add_argument(
-    "--raw",
-    action="store_true",
-    help="Flag that the archive file should be downloaded directly without processing.",
-)
-parser.add_argument(
-    "-f",
-    "--feed",
-    dest="feed",
-    choices=FEED_TO_KEY_MAPPING.keys(),
-    default="bus",
-    help='Feed to retrieve. Defaults to "bus"',
-)
-parser.add_argument(
-     "--object-prefix",
-    dest="object_prefix",
-    help="Specify a custom prefix for the key of the object to load from S3",
-)
-args = vars(parser.parse_args())
-
-dateTime = datetime.fromisoformat(args["datetime"]).astimezone(pytz.utc)
-
-feed_type_choices = FEED_TO_KEY_MAPPING[args["feed"]]
-if args["stops"]:
-    args["stops"] = args["stops"].split(",")
-else:
-    args["stops"] = []
-
-if not args["output"]:
-    if os.path.exists("scripts/"):
-        # If the script is being called from the PredictionLoc root directory:
-        if not os.path.exists("output/"):
-            os.mkdir("output/")
-        args["output"] = "output/{0}-{1}.json".format(args["feed"], args["datetime"])
-    else:
-        # Assume the script is being called from the prediction-loc/scripts directory:
-        if not os.path.exists("../output/"):
-            os.mkdir("../output/")
-        args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
-
-if args["object_prefix"]:
-    OBJECT_PREFIX_FORMAT = args["object_prefix"] + "/" + OBJECT_PREFIX_FORMAT
-elif not args["feed"].startswith("concentrate"):
-    OBJECT_PREFIX_FORMAT = "concentrate/" + OBJECT_PREFIX_FORMAT
-
-outputfile = os.path.expanduser(args["output"])
-with open(outputfile, "w") as file:
-    bucketName = os.getenv("S3_BUCKET_NAME")
-    print('Using bucket "{0}"'.format(bucketName))
-    s3 = boto3.resource("s3")
-    feed = None
-    bucket = s3.Bucket(bucketName)
-    prefix = OBJECT_PREFIX_FORMAT.format(
-        dateTime.year, dateTime.month, dateTime.day, dateTime.hour, dateTime.minute
+def main():
+    parser = argparse.ArgumentParser(
+        description="Retrieve an archived GTFS-rt file from S3"
     )
-    objectsWithPrefix = bucket.objects.filter(Prefix=prefix)
-    for obj in objectsWithPrefix:
-        if any(
-                all(feed_type in obj.key for feed_type in feed_types)
-                for feed_types in feed_type_choices):
-            if args["raw"]:
-                print("Downloading {0}...".format(obj.key))
-                bucket.download_file(obj.key, outputfile)
-            else:
-                url = URL_FORMAT.format(bucketName, obj.key)
-                print("Processing {0}...".format(url))
-                response = requests.get(url)
-                if "json" in obj.key:
-                    feed = response.json()
-                else:
-                    feed_obj = gtfs_realtime_pb2.FeedMessage()
-                    feed_obj.ParseFromString(response.content)
-                    feed = protobuf_to_dict(feed_obj)
-                feed["header"]["timestamp"] = unix_to_local_string(
-                    int(feed["header"]["timestamp"])
-                )
-                feed["entity"] = [
-                    convert_timestamps(e)
-                    for e in feed["entity"]
-                    if matches_filters(e, args)
-                ]
-                file.write(json.dumps(feed, indent=2))
-            break
+    parser.add_argument(
+        "-D",
+        "--datetime",
+        dest="datetime",
+        required=True,
+        help="Datetime of desired archive file, in ISO 8601 & 3339 formats ({YYYY}-{MM}-{DD}T{HH}:{mm}-{utc_tz_offset}?)",
+    )
+    parser.add_argument(
+        "-o", "--output", dest="output", help="Location for where to place the output file"
+    )
+    parser.add_argument(
+        "-s",
+        "--stop",
+        dest="stops",
+        help="Use to only include trip_updates affecting the given stop_id(s). Multiple ids should be comma-separated",
+    )
+    parser.add_argument(
+        "-r",
+        "--route",
+        dest="route",
+        help="Use to only include trip_updates affecting the given route",
+    )
+    parser.add_argument(
+        "-t", "--trip", dest="trip", help="Use to only include a specific trip_id"
+    )
+    parser.add_argument(
+        "--raw",
+        action="store_true",
+        help="Flag that the archive file should be downloaded directly without processing.",
+    )
+    parser.add_argument(
+        "-f",
+        "--feed",
+        dest="feed",
+        choices=FEED_TO_KEY_MAPPING.keys(),
+        default="bus",
+        help='Feed to retrieve. Defaults to "bus"',
+    )
+    parser.add_argument(
+        "--object-prefix",
+        dest="object_prefix",
+        help="Specify a custom prefix for the key of the object to load from S3",
+    )
+    args = vars(parser.parse_args())
+
+    dateTime = datetime.fromisoformat(args["datetime"]).astimezone(pytz.utc)
+
+    feed_type_choices = FEED_TO_KEY_MAPPING[args["feed"]]
+    if args["stops"]:
+        args["stops"] = args["stops"].split(",")
     else:
-        print('No matching file found with prefix "{0}".'.format(prefix))
-    print("Done.")
+        args["stops"] = []
+
+    if not args["output"]:
+        if os.path.exists("scripts/"):
+            # If the script is being called from the PredictionLoc root directory:
+            if not os.path.exists("output/"):
+                os.mkdir("output/")
+            args["output"] = "output/{0}-{1}.json".format(args["feed"], args["datetime"])
+        else:
+            # Assume the script is being called from the prediction-loc/scripts directory:
+            if not os.path.exists("../output/"):
+                os.mkdir("../output/")
+            args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
+
+    if args["object_prefix"]:
+        OBJECT_PREFIX_FORMAT = args["object_prefix"] + "/" + OBJECT_PREFIX_FORMAT
+    elif not args["feed"].startswith("concentrate"):
+        OBJECT_PREFIX_FORMAT = "concentrate/" + OBJECT_PREFIX_FORMAT
+
+    outputfile = os.path.expanduser(args["output"])
+    with open(outputfile, "w") as file:
+        bucketName = os.getenv("S3_BUCKET_NAME")
+        print('Using bucket "{0}"'.format(bucketName))
+        s3 = boto3.resource("s3")
+        feed = None
+        bucket = s3.Bucket(bucketName)
+        prefix = OBJECT_PREFIX_FORMAT.format(
+            dateTime.year, dateTime.month, dateTime.day, dateTime.hour, dateTime.minute
+        )
+        objectsWithPrefix = bucket.objects.filter(Prefix=prefix)
+        for obj in objectsWithPrefix:
+            if any(
+                    all(feed_type in obj.key for feed_type in feed_types)
+                    for feed_types in feed_type_choices):
+                if args["raw"]:
+                    print("Downloading {0}...".format(obj.key))
+                    bucket.download_file(obj.key, outputfile)
+                else:
+                    url = URL_FORMAT.format(bucketName, obj.key)
+                    print("Processing {0}...".format(url))
+                    response = requests.get(url)
+                    if "json" in obj.key:
+                        feed = response.json()
+                    else:
+                        feed_obj = gtfs_realtime_pb2.FeedMessage()
+                        feed_obj.ParseFromString(response.content)
+                        feed = protobuf_to_dict(feed_obj)
+                    feed["header"]["timestamp"] = unix_to_local_string(
+                        int(feed["header"]["timestamp"])
+                    )
+                    feed["entity"] = [
+                        convert_timestamps(e)
+                        for e in feed["entity"]
+                        if matches_filters(e, args)
+                    ]
+                    file.write(json.dumps(feed, indent=2))
+                break
+        else:
+            print('No matching file found with prefix "{0}".'.format(prefix))
+        print("Done.")
+
+if __name__ == "__main__":
+    main()
