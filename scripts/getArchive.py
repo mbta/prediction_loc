@@ -37,7 +37,7 @@ def bucket_object_prefix_format_string(args):
     )
 
     if args["object_prefix"]:
-        return f"{args["object_prefix"]}/{OBJECT_PREFIX_FORMAT}"
+        return f'{args["object_prefix"]}/{OBJECT_PREFIX_FORMAT}'
     elif not args["feed"].startswith("concentrate"):
         return f"concentrate/{OBJECT_PREFIX_FORMAT}"
 
