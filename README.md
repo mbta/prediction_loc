@@ -37,7 +37,7 @@ poetry run prediction-loc --datetime 2023-04-04T04:04-04:00
 poetry run prediction-loc --datetime 2023-04-04T04:04
 ```
 
-You can also use utilities which generate `ISO 8601` & `ISO 3339` formatted datetimes such as `date`.
+You can also use utilities which generate [`ISO 8601` & `ISO 3339`](https://ijmacd.github.io/rfc3339-iso8601/) formatted datetimes such as `date`.
 
 Depending on the source of your `date` binary, the syntax may look a bit different
 
