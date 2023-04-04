@@ -123,7 +123,7 @@ def convert_timestamps(ent):
         ent["alert"] = alert
     return ent
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser(
         description="Retrieve an archived GTFS-rt file from S3"
     )
@@ -170,8 +170,9 @@ def main():
         dest="object_prefix",
         help="Specify a custom prefix for the key of the object to load from S3",
     )
-    args = vars(parser.parse_args())
+    return vars(parser.parse_args())
 
+def main(args):
     dateTime = datetime.fromisoformat(args["datetime"]).astimezone(pytz.utc)
 
     feed_type_choices = FEED_TO_KEY_MAPPING[args["feed"]]
@@ -235,4 +236,4 @@ def main():
         print("Done.")
 
 if __name__ == "__main__":
-    main()
+    main(parse_args())
