@@ -9,7 +9,6 @@ from datetime import datetime
 from google.transit import gtfs_realtime_pb2
 from protobuf_to_dict import protobuf_to_dict
 
-
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
 TIMESTAMP_FORMAT = "%Y-%m-%d %-I:%M:%S %p"
