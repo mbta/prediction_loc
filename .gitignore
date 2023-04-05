@@ -104,3 +104,4 @@ venv.bak/
 
 # default output location for generated files
 output/
+.envrc
