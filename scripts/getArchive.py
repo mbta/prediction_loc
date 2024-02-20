@@ -39,6 +39,8 @@ def bucket_object_prefix_format_string(args):
         return f'{args["object_prefix"]}/{OBJECT_PREFIX_FORMAT}'
     elif not args["feed"].startswith("concentrate"):
         return f"concentrate/{OBJECT_PREFIX_FORMAT}"
+    else:
+        return OBJECT_PREFIX_FORMAT
 
 def matches_filters(ent, args):
     trip = entity_trip(ent)
