@@ -16,8 +16,8 @@ TIMESTAMP_FORMAT = "%Y-%m-%d %-I:%M:%S %p"
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
 FEED_TO_KEY_MAPPING = {
     "bus": [["mbta_bus_", "trip_updates"]],
+    "subway_vehicle": [["rtr", "VehiclePositions"]],
     "subway": [["rtr", "TripUpdates"]],
-    "subway_enhanced": [["rtr", "TripUpdates_enhanced"]],
     "cr": [["mbta_cr_", "trip_updates"]],
     "cr_vehicle": [["mbta_cr_", "vehicle_positions"]],
     "cr_boarding": [["com_TripUpdates_enhanced"]],
@@ -63,7 +63,7 @@ def matches_filters(ent, args):
 
 
 def entity_trip(ent):
-    if "trip_update" in ent:
+    if "trip_update" in ent and ent["trip_update"] is not None:
         return ent["trip_update"]["trip"]
     if "vehicle" in ent:
         return ent["vehicle"].get("trip")
