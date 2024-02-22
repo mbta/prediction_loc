@@ -4,6 +4,7 @@ import gzip
 import json
 import os
 import pytz
+import sys
 import requests
 from datetime import datetime
 from google.transit import gtfs_realtime_pb2
@@ -201,7 +202,10 @@ def main(args):
     outputfile = os.path.expanduser(args["output"])
     with open(outputfile, "w") as file:
         bucketName = os.getenv("S3_BUCKET_NAME")
-        print('Using bucket "{0}"'.format(bucketName))
+        if bucketName is None:
+            sys.exit(f"Error: S3_BUCKET_NAME is not set, please see README.md instructions")
+        else:
+            print('Using bucket "{0}"'.format(bucketName))
         s3 = boto3.resource("s3")
         feed = None
         bucket = s3.Bucket(bucketName)
