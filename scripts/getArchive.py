@@ -198,7 +198,7 @@ def main(args):
             [
                 "{0}={1}".format(k, v)
                 for (k, v) in args.items()
-                if isinstance(v, str) and k != "feed" and k != "datetime"
+                if isinstance(v, str) and k not in {"feed", "datetime"}
             ]
         )
         filters = "-".join(
