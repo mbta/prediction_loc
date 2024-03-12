@@ -5,7 +5,7 @@ Downloads archived MBTA real-time data feeds from various sources.
 ## Prerequisites
 
 * Python 3
-  * **Mac/Linux:** can install using [asdf](https://asdf-vm.com/) (`asdf install` in this directory)
+  * **Mac/Linux:** can install using [asdf](https://asdf-vm.com/) (`asdf install` in this directory) and then `pip install --user pipenv`
   * **Mac:** can install from [Homebrew](https://brew.sh) (`brew install python3 pipenv`)
   * **Windows:**
     * download from [official site](https://www.python.org/downloads/windows/)
@@ -21,6 +21,7 @@ Downloads archived MBTA real-time data feeds from various sources.
 ## Setup
 
 * `pipenv install` in this directory
+  * If this doesn't work with asdf, check `which python` and if it's correct, you can try `python -m pipenv install`
 * `export S3_BUCKET_NAME=x`, replacing `x` with bucket name stored in 1Password
 
 ## Clone and step into the Github directory
@@ -42,8 +43,8 @@ You can also use utilities which generate [`ISO 8601` & `ISO 3339`](https://ijma
 
 Depending on the source of your `date` binary, the syntax may look a bit different
 
-For instance, `date` from `GNU coreutils` has a `-Iminutes` to specify `ISO 8601` format, 
-and the `-d` flag which accepts a wide range of inputs documented on 
+For instance, `date` from `GNU coreutils` has a `-Iminutes` to specify `ISO 8601` format,
+and the `-d` flag which accepts a wide range of inputs documented on
 [GNU Date Input Formats Documentation](https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html)
 Among other options https://www.gnu.org/software/coreutils/manual/html_node/Options-for-date.html
 ```
@@ -52,8 +53,8 @@ pipenv run getArchive --datetime $(date -Iminutes -d 'last Fri')
 ```
 
 
-Whereas on macOS, which uses `date` from BSD land, also has `-Iminutes` for 
-`ISO 8601` format, but uses the `-v` flag to set the date (which is documented at 
+Whereas on macOS, which uses `date` from BSD land, also has `-Iminutes` for
+`ISO 8601` format, but uses the `-v` flag to set the date (which is documented at
 the [FreeBSD `date` command manual page](https://man.freebsd.org/cgi/man.cgi?date)
 or via `man date` on macOS)
 ```
