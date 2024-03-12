@@ -4,6 +4,7 @@ import gzip
 import json
 import os
 import pytz
+import sys
 import requests
 from datetime import datetime
 from google.transit import gtfs_realtime_pb2
@@ -15,25 +16,29 @@ TIMESTAMP_FORMAT = "%Y-%m-%d %-I:%M:%S %p"
 URL_FORMAT = "https://s3.amazonaws.com/{0}/{1}"
 FEED_TO_KEY_MAPPING = {
     "bus": [["mbta_bus_", "trip_updates"]],
+    "subway_vehicle": [["rtr", "VehiclePositions"]],
     "subway": [["rtr", "TripUpdates"]],
     "cr": [["mbta_cr_", "trip_updates"]],
     "cr_vehicle": [["mbta_cr_", "vehicle_positions"]],
     "cr_boarding": [["com_TripUpdates_enhanced"]],
     "winthrop": [["mbta_winthrop_", "trip_updates"]],
-    "concentrate": [["concentrate_TripUpdates_enhanced"],
-                    ["realtime_TripUpdates_enhanced"]],
-    "concentrate_vehicle": [["concentrate_VehiclePositions_enhanced"],
-                            ["realtime_VehiclePositions_enhanced"]],
+    "concentrate": [
+        ["concentrate_TripUpdates_enhanced"],
+        ["realtime_TripUpdates_enhanced"],
+    ],
+    "concentrate_vehicle": [
+        ["concentrate_VehiclePositions_enhanced"],
+        ["realtime_VehiclePositions_enhanced"],
+    ],
     "alerts": [["Alerts_enhanced"]],
     "busloc": [["busloc", "TripUpdates"]],
     "busloc_vehicle": [["busloc", "VehiclePositions"]],
-    "swiftly_bus_vehicle": [["goswift.ly", "mbta_bus", "vehicle_positions"]]
+    "swiftly_bus_vehicle": [["goswift.ly", "mbta_bus", "vehicle_positions"]],
 }
 
+
 def bucket_object_prefix_format_string(args):
-    OBJECT_PREFIX_FORMAT = (
-        "{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
-    )
+    OBJECT_PREFIX_FORMAT = "{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
 
     if args["object_prefix"]:
         return f'{args["object_prefix"]}/{OBJECT_PREFIX_FORMAT}'
@@ -41,6 +46,7 @@ def bucket_object_prefix_format_string(args):
         return f"concentrate/{OBJECT_PREFIX_FORMAT}"
     else:
         return OBJECT_PREFIX_FORMAT
+
 
 def matches_filters(ent, args):
     trip = entity_trip(ent)
@@ -61,7 +67,7 @@ def matches_filters(ent, args):
 
 
 def entity_trip(ent):
-    if "trip_update" in ent:
+    if "trip_update" in ent and ent["trip_update"] is not None:
         return ent["trip_update"]["trip"]
     if "vehicle" in ent:
         return ent["vehicle"].get("trip")
@@ -124,6 +130,7 @@ def convert_timestamps(ent):
         ent["alert"] = alert
     return ent
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Retrieve an archived GTFS-rt file from S3"
@@ -136,7 +143,10 @@ def parse_args():
         help="Datetime of desired archive file, in ISO 8601 & 3339 formats ({YYYY}-{MM}-{DD}T{HH}:{mm}-{utc_tz_offset}?)",
     )
     parser.add_argument(
-        "-o", "--output", dest="output", help="Location for where to place the output file"
+        "-o",
+        "--output",
+        dest="output",
+        help="Location for where to place the output file",
     )
     parser.add_argument(
         "-s",
@@ -173,6 +183,7 @@ def parse_args():
     )
     return vars(parser.parse_args())
 
+
 def main(args):
     dateTime = datetime.fromisoformat(args["datetime"]).astimezone(pytz.utc)
 
@@ -183,21 +194,37 @@ def main(args):
         args["stops"] = []
 
     if not args["output"]:
+        extra_filters = "-".join(
+            [
+                "{0}={1}".format(k, v)
+                for (k, v) in args.items()
+                if isinstance(v, str) and k not in {"feed", "datetime"}
+            ]
+        )
+        filters = "-".join(
+            filter(None, [args["feed"], args["datetime"], extra_filters])
+        )
         if os.path.exists("scripts/"):
             # If the script is being called from the PredictionLoc root directory:
             if not os.path.exists("output/"):
                 os.mkdir("output/")
-            args["output"] = "output/{0}-{1}.json".format(args["feed"], args["datetime"])
+            args["output"] = "output/{}.json".format(filters)
         else:
             # Assume the script is being called from the prediction-loc/scripts directory:
             if not os.path.exists("../output/"):
                 os.mkdir("../output/")
-            args["output"] = "../output/{0}-{1}.json".format(args["feed"], args["datetime"])
+            args["output"] = "../output/{}.json".format(filters)
 
+    print("Setting output file path to", args["output"])
     outputfile = os.path.expanduser(args["output"])
     with open(outputfile, "w") as file:
         bucketName = os.getenv("S3_BUCKET_NAME")
-        print('Using bucket "{0}"'.format(bucketName))
+        if bucketName is None:
+            sys.exit(
+                f"Error: S3_BUCKET_NAME is not set, please see README.md instructions"
+            )
+        else:
+            print('Using bucket "{0}"'.format(bucketName))
         s3 = boto3.resource("s3")
         feed = None
         bucket = s3.Bucket(bucketName)
@@ -207,8 +234,9 @@ def main(args):
         objectsWithPrefix = bucket.objects.filter(Prefix=prefix)
         for obj in objectsWithPrefix:
             if any(
-                    all(feed_type in obj.key for feed_type in feed_types)
-                    for feed_types in feed_type_choices):
+                all(feed_type in obj.key for feed_type in feed_types)
+                for feed_types in feed_type_choices
+            ):
                 if args["raw"]:
                     print("Downloading {0}...".format(obj.key))
                     bucket.download_file(obj.key, outputfile)
@@ -235,6 +263,7 @@ def main(args):
         else:
             print('No matching file found with prefix "{0}".'.format(prefix))
         print("Done.")
+
 
 if __name__ == "__main__":
     main(parse_args())
