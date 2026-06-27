@@ -4,12 +4,14 @@ Downloads archived MBTA real-time data feeds from various sources.
 
 ## Prerequisites
 
-* Python 3
-  * **Mac/Linux:** can install using [asdf](https://asdf-vm.com/) (`asdf install` in this directory) and then `pip install --user pipenv`
-  * **Mac:** can install from [Homebrew](https://brew.sh) (`brew install python3 pipenv`)
+* Python 3.14+
+  * **Mac/Linux:** can install using [asdf](https://asdf-vm.com/) (`asdf install` in this directory)
+  * **Mac:** can install from [Homebrew](https://brew.sh) (`brew install python@3.14`)
   * **Windows:**
     * download from [official site](https://www.python.org/downloads/windows/)
-    * install Pipenv: `pip3 install --user pipenv`
+* uv
+  * **Mac:** `brew install uv`
+  * **Any:** see installation options at [docs.astral.sh/uv](https://docs.astral.sh/uv/)
 * AWS CLI
   * **Mac:** can install from Homebrew (`brew install awscli`)
   * **Any:** can install as a global Python package (`pip3 install --user awscli`)
@@ -20,8 +22,7 @@ Downloads archived MBTA real-time data feeds from various sources.
 
 ## Setup
 
-* `pipenv install` in this directory
-  * If this doesn't work with asdf, check `which python` and if it's correct, you can try `python -m pipenv install`
+* `uv sync` in this directory
 * `export S3_BUCKET_NAME=x`, replacing `x` with bucket name stored in 1Password
 
 ## Clone and step into the Github directory
@@ -31,12 +32,12 @@ Downloads archived MBTA real-time data feeds from various sources.
 ## Usage
 
 ```
-pipenv run getArchive --datetime [YYYY-MM-DDTHH:mm]
-pipenv run getArchive --datetime 2023-04-04T04:04-04:00
+uv run scripts/getArchive.py --datetime [YYYY-MM-DDTHH:mm]
+uv run scripts/getArchive.py --datetime 2023-04-04T04:04-04:00
 
 # When specified without timezone information,
 # this will attempt to guess/use your local timezone
-pipenv run getArchive --datetime 2023-04-04T04:04
+uv run scripts/getArchive.py --datetime 2023-04-04T04:04
 ```
 
 You can also use utilities which generate [`ISO 8601` & `ISO 3339`](https://ijmacd.github.io/rfc3339-iso8601/) formatted datetimes such as `date`.
@@ -48,8 +49,8 @@ and the `-d` flag which accepts a wide range of inputs documented on
 [GNU Date Input Formats Documentation](https://www.gnu.org/software/coreutils/manual/html_node/Date-input-formats.html)
 Among other options https://www.gnu.org/software/coreutils/manual/html_node/Options-for-date.html
 ```
-pipenv run getArchive --datetime $(date -Iminutes -d '04/04 04:04')
-pipenv run getArchive --datetime $(date -Iminutes -d 'last Fri')
+uv run scripts/getArchive.py --datetime $(date -Iminutes -d '04/04 04:04')
+uv run scripts/getArchive.py --datetime $(date -Iminutes -d 'last Fri')
 ```
 
 
@@ -58,10 +59,10 @@ Whereas on macOS, which uses `date` from BSD land, also has `-Iminutes` for
 the [FreeBSD `date` command manual page](https://man.freebsd.org/cgi/man.cgi?date)
 or via `man date` on macOS)
 ```
-pipenv run getArchive --datetime $(date -Iminutes -v 04m -v 04d -v 04H -v 04M)
+uv run scripts/getArchive.py --datetime $(date -Iminutes -v 04m -v 04d -v 04H -v 04M)
 
 # One month and one day ago
-pipenv run getArchive --datetime $(date -Iminutes -v -1m -v -1d)
+uv run scripts/getArchive.py --datetime $(date -Iminutes -v -1m -v -1d)
 ```
 
 ### Optional arguments

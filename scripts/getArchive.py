@@ -184,7 +184,10 @@ def parse_args():
     return vars(parser.parse_args())
 
 
-def main(args):
+def main(args=None):
+    if args is None:
+        args = parse_args()
+
     dateTime = datetime.fromisoformat(args["datetime"]).astimezone(pytz.utc)
 
     feed_type_choices = FEED_TO_KEY_MAPPING[args["feed"]]
@@ -266,4 +269,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    main(parse_args())
+    main()
