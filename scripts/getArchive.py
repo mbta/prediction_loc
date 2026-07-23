@@ -137,7 +137,7 @@ def convert_timestamps(ent):
     return ent
 
 
-def parse_args():
+def parse_args(cli_args=None):
     parser = argparse.ArgumentParser(
         description="Retrieve an archived GTFS-rt file from S3"
     )
@@ -187,7 +187,7 @@ def parse_args():
         dest="object_prefix",
         help="Specify a custom prefix for the key of the object to load from S3",
     )
-    return vars(parser.parse_args())
+    return vars(parser.parse_args(cli_args))
 
 
 def main(args=None):
@@ -277,5 +277,21 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    main({"datetime": "2026-06-25T04:04:-04:00", "feed": "bus", "output": "output/test.json", "stops": None, "route": None, "trip": None, "object_prefix": None, "raw": False})
-    # main()
+    from tempfile import TemporaryDirectory
+
+    with TemporaryDirectory() as tempdir:
+        smoke_test_args = parse_args(
+            [
+                "--datetime",
+                "2026-06-25T04:04-04:00",
+                "--feed",
+                "bus",
+                "--stop",
+                "place-north,place-sstat",
+                "--route",
+                "1",
+                "--output",
+                os.path.join(tempdir, "getArchive-smoke-test.json"),
+            ]
+        )
+        main(smoke_test_args)
