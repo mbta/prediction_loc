@@ -41,7 +41,7 @@ def bucket_object_prefix_format_string(args):
     OBJECT_PREFIX_FORMAT = "{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
 
     if args["object_prefix"]:
-        return f'{args["object_prefix"]}/{OBJECT_PREFIX_FORMAT}'
+        return f"{args['object_prefix']}/{OBJECT_PREFIX_FORMAT}"
     elif not args["feed"].startswith("concentrate"):
         return f"concentrate/{OBJECT_PREFIX_FORMAT}"
     else:
@@ -258,9 +258,7 @@ def main(args=None):
                     else:
                         feed_obj = gtfs_realtime_pb2.FeedMessage()
                         feed_obj.ParseFromString(response.content)
-                        feed = MessageToDict(
-                            feed_obj, preserving_proto_field_name=True
-                        )
+                        feed = MessageToDict(feed_obj, preserving_proto_field_name=True)
                     feed["header"]["timestamp"] = unix_to_local_string(
                         feed["header"]["timestamp"]
                     )
