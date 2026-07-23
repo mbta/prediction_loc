@@ -8,7 +8,7 @@ import sys
 import requests
 from datetime import datetime
 from google.transit import gtfs_realtime_pb2
-from protobuf_to_dict import protobuf_to_dict
+from google.protobuf.json_format import MessageToDict
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
@@ -87,11 +87,17 @@ def matches_route(route, args):
 def unix_to_local_string(unix):
     if unix is None:
         return None
-    else:
-        time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(
-            LOCAL_TIMEZONE
-        )
-        return datetime.strftime(time, TIMESTAMP_FORMAT)
+
+    # Protobuf JSON conversion may emit int64 values as strings.
+    if isinstance(unix, str):
+        unix = unix.strip()
+        if unix == "":
+            return None
+        unix = float(unix) if "." in unix else int(unix)
+
+    time = datetime.fromtimestamp(unix, tz=pytz.utc).astimezone(LOCAL_TIMEZONE)
+
+    return datetime.strftime(time, TIMESTAMP_FORMAT)
 
 
 def convert_timestamps(ent):
@@ -252,9 +258,11 @@ def main(args=None):
                     else:
                         feed_obj = gtfs_realtime_pb2.FeedMessage()
                         feed_obj.ParseFromString(response.content)
-                        feed = protobuf_to_dict(feed_obj)
+                        feed = MessageToDict(
+                            feed_obj, preserving_proto_field_name=True
+                        )
                     feed["header"]["timestamp"] = unix_to_local_string(
-                        int(feed["header"]["timestamp"])
+                        feed["header"]["timestamp"]
                     )
                     feed["entity"] = [
                         convert_timestamps(e)
@@ -269,4 +277,5 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    main()
+    main({"datetime": "2026-06-25T04:04:-04:00", "feed": "bus", "output": "output/test.json", "stops": None, "route": None, "trip": None, "object_prefix": None, "raw": False})
+    # main()
