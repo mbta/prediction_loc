@@ -275,21 +275,4 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    from tempfile import TemporaryDirectory
-
-    with TemporaryDirectory() as tempdir:
-        smoke_test_args = parse_args(
-            [
-                "--datetime",
-                "2026-06-25T04:04-04:00",
-                "--feed",
-                "bus",
-                "--stop",
-                "place-north,place-sstat",
-                "--route",
-                "1",
-                "--output",
-                os.path.join(tempdir, "getArchive-smoke-test.json"),
-            ]
-        )
-        main(smoke_test_args)
+    main(parse_args())
