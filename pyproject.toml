@@ -1,0 +1,23 @@
+[project]
+name = "prediction-loc"
+version = "0.1.0"
+description = "Download archived MBTA real-time data feeds from S3"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "boto3",
+    "gtfs-realtime-bindings",
+    "protobuf",
+    "protobuf3-to-dict",
+    "pytz",
+    "requests",
+]
+
+[dependency-groups]
+dev = [
+    "black>=24.10.0",
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

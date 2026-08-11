@@ -8,7 +8,7 @@ import sys
 import requests
 from datetime import datetime
 from google.transit import gtfs_realtime_pb2
-from protobuf_to_dict import protobuf_to_dict
+from google.protobuf.json_format import MessageToDict
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M"
 LOCAL_TIMEZONE = pytz.timezone("US/Eastern")
@@ -41,7 +41,7 @@ def bucket_object_prefix_format_string(args):
     OBJECT_PREFIX_FORMAT = "{0}/{1:02d}/{2:02d}/{0:02d}-{1:02d}-{2:02d}T{3:02d}:{4:02d}"
 
     if args["object_prefix"]:
-        return f'{args["object_prefix"]}/{OBJECT_PREFIX_FORMAT}'
+        return f"{args['object_prefix']}/{OBJECT_PREFIX_FORMAT}"
     elif not args["feed"].startswith("concentrate"):
         return f"concentrate/{OBJECT_PREFIX_FORMAT}"
     else:
@@ -87,11 +87,17 @@ def matches_route(route, args):
 def unix_to_local_string(unix):
     if unix is None:
         return None
-    else:
-        time = pytz.utc.localize(datetime.utcfromtimestamp(unix)).astimezone(
-            LOCAL_TIMEZONE
-        )
-        return datetime.strftime(time, TIMESTAMP_FORMAT)
+
+    # Protobuf JSON conversion may emit int64 values as strings.
+    if isinstance(unix, str):
+        unix = unix.strip()
+        if unix == "":
+            return None
+        unix = float(unix) if "." in unix else int(unix)
+
+    time = datetime.fromtimestamp(unix, tz=pytz.utc).astimezone(LOCAL_TIMEZONE)
+
+    return datetime.strftime(time, TIMESTAMP_FORMAT)
 
 
 def convert_timestamps(ent):
@@ -131,7 +137,7 @@ def convert_timestamps(ent):
     return ent
 
 
-def parse_args():
+def parse_args(cli_args=None):
     parser = argparse.ArgumentParser(
         description="Retrieve an archived GTFS-rt file from S3"
     )
@@ -181,10 +187,13 @@ def parse_args():
         dest="object_prefix",
         help="Specify a custom prefix for the key of the object to load from S3",
     )
-    return vars(parser.parse_args())
+    return vars(parser.parse_args(cli_args))
 
 
-def main(args):
+def main(args=None):
+    if args is None:
+        args = parse_args()
+
     dateTime = datetime.fromisoformat(args["datetime"]).astimezone(pytz.utc)
 
     feed_type_choices = FEED_TO_KEY_MAPPING[args["feed"]]
@@ -249,9 +258,9 @@ def main(args):
                     else:
                         feed_obj = gtfs_realtime_pb2.FeedMessage()
                         feed_obj.ParseFromString(response.content)
-                        feed = protobuf_to_dict(feed_obj)
+                        feed = MessageToDict(feed_obj, preserving_proto_field_name=True)
                     feed["header"]["timestamp"] = unix_to_local_string(
-                        int(feed["header"]["timestamp"])
+                        feed["header"]["timestamp"]
                     )
                     feed["entity"] = [
                         convert_timestamps(e)
