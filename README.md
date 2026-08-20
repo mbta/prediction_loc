@@ -79,6 +79,15 @@ uv run scripts/getArchive.py --datetime $(date -Iminutes -v -1m -v -1d)
 
 **Note:** route_id is matched exactly for the `bus` and `concentrate` feeds, but does substring matching for all others. For example, `--route Green` will include all Green Line branches, and `--route Worcester` will still match route_id `CR-Worcester`.
 
+### Using JQ to wrangle the output
+
+You can use the [jq](https://jqlang.org/) JSON processing language to answer many questions about the data. For example, if you wanted to find all trip updates for a given vehicle:
+```bash
+cat feed.json | jq -c '.entity | .[] | select(.trip_update.vehicle.id == "foo")' | jq
+```
+
+This searches for all vehicles with a vehicle ID of `foo` within `feed.json`.
+
 ### Troubleshooting
 
 If the `aws` command cannot be found, you will need to add it to your `PATH`:
